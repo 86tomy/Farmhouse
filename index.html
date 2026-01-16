@@ -7,26 +7,32 @@
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
-        :root { --primary: #27ae60; --dark: #2c3e50; --bg: #f0f2f5; --card: #ffffff; --text: #333; --border: #eee; }
+        :root { --primary: #27ae60; --dark: #2c3e50; --bg: #f0f2f5; --card: #ffffff; --text: #333; --border: #ddd; }
         body.dark-mode { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --border: #333; }
         
         body { font-family: 'Segoe UI', sans-serif; margin: 20px; background: var(--bg); color: var(--text); transition: 0.3s; }
         .container { max-width: 1400px; margin: auto; }
         
+        /* Header */
         .header-app { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        
+        /* Dashboard */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .stat-card { padding: 20px; border-radius: 12px; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         
+        /* Form Input - Kembalikan ke Awal */
         .input-section { background: var(--card); padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; border-top: 5px solid var(--primary); }
         .input-group { display: flex; flex-direction: column; }
         .input-group label { font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: var(--primary); }
-        input, select { padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); }
+        input, select { padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); outline: none; }
         
+        /* Search */
         .search-bar { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .search-bar input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); }
 
+        /* Table 2 Tingkat - Kembalikan ke Awal */
         .table-container { overflow-x: auto; background: var(--card); border-radius: 12px; box-shadow: 0 4px 25px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; min-width: 1200px; font-size: 0.95em; }
+        table { width: 100%; border-collapse: collapse; min-width: 1300px; font-size: 0.95em; }
         th, td { border: 1px solid var(--border); padding: 12px 8px; text-align: center; }
         
         th { background: #f8f9fa; color: #333; font-weight: 700; text-transform: uppercase; font-size: 0.75em; }
@@ -37,7 +43,7 @@
         .bg-header-dark { background-color: #34495e !important; color: white !important; }
         .row-total { background-color: #2c3e50 !important; color: white !important; font-weight: bold; }
 
-        button { cursor: pointer; border-radius: 8px; font-weight: bold; border: none; padding: 10px 15px; }
+        button { cursor: pointer; border-radius: 8px; font-weight: bold; border: none; padding: 10px 15px; transition: 0.2s; }
         #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display:flex; justify-content:center; align-items:center; z-index:9999; }
     </style>
 </head>
@@ -46,7 +52,7 @@
 <div id="loginOverlay">
     <div style="background: white; padding: 40px; border-radius: 20px; text-align: center; width: 350px;">
         <h2 style="color:#333; margin-top:0">🔐 FARMHOUSE BOGOR</h2>
-        <input type="password" id="pinInput" style="text-align:center; width:90%; margin-bottom:20px; font-size:2em; letter-spacing: 5px;">
+        <input type="password" id="pinInput" style="text-align:center; width:90%; margin-bottom:20px; font-size:2em; letter-spacing: 5px;" placeholder="PIN">
         <button style="background:#27ae60; color:white; width:100%; padding:15px;" onclick="checkPin()">MASUK</button>
     </div>
 </div>
@@ -73,25 +79,25 @@
             <label>Nama Pekerja</label>
             <div style="display: flex; gap: 8px;">
                 <select id="namaOrang" style="flex:1"></select>
-                <button onclick="tambahPekerja()" style="background:#3498db; color:white">+</button>
-                <button onclick="hapusPekerja()" style="background:#e74c3c; color:white">-</button>
+                <button onclick="tambahPekerja()" style="background:#3498db; color:white; width:45px">+</button>
+                <button onclick="hapusPekerja()" style="background:#e74c3c; color:white; width:45px">-</button>
             </div>
         </div>
         <div class="input-group"><label>Tanggal</label><input type="date" id="tgl"></div>
-        <div class="input-group"><label>Cegel</label><input type="text" id="cegel" onkeyup="formatInput(this)"></div>
-        <div class="input-group"><label>Rate</label><input type="text" id="rate" onkeyup="formatInput(this)"></div>
-        <div class="input-group"><label>Guardian (DE + DD)</label><input type="text" id="guardian" onkeyup="formatInput(this)"></div>
+        <div class="input-group"><label>Cegel</label><input type="text" id="cegel" placeholder="0" onkeyup="formatInput(this)"></div>
+        <div class="input-group"><label>Rate</label><input type="text" id="rate" placeholder="0" onkeyup="formatInput(this)"></div>
+        <div class="input-group"><label>Guardian (DE + DD)</label><input type="text" id="guardian" placeholder="0" onkeyup="formatInput(this)"></div>
         <div class="input-group"><label>Makan Harian</label><input type="text" id="makan" value="10.000" onkeyup="formatInput(this)"></div>
         <div class="input-group">
             <label>Kasbon</label>
-            <input type="text" id="kasbon" onkeyup="formatInput(this)">
+            <input type="text" id="kasbon" placeholder="0" onkeyup="formatInput(this)">
             <label style="font-size:0.7em; margin-top:5px; color:#e74c3c"><input type="checkbox" id="potongKasbon"> Potong Transfer?</label>
         </div>
         <button style="background:#27ae60; color:white; height:48px; margin-top:20px" onclick="simpanData()">SIMPAN DATA</button>
     </div>
 
     <div class="search-bar">
-        <input type="text" id="cariNama" placeholder="🔍 Cari Nama..." onkeyup="muatTabel()">
+        <input type="text" id="cariNama" placeholder="🔍 Cari Nama Pekerja..." onkeyup="muatTabel()">
         <input type="date" id="fTglAwal" onchange="muatTabel()">
         <input type="date" id="fTglAkhir" onchange="muatTabel()">
     </div>
@@ -100,9 +106,9 @@
         <table>
             <thead>
                 <tr>
-                    <th rowspan="2">Nama</th><th rowspan="2">Tanggal</th>
-                    <th colspan="4" class="bg-earning">Earning</th>
-                    <th colspan="2" class="bg-header-dark">Bagi Hasil (50/50)</th>
+                    <th rowspan="2">Nama Pekerja</th><th rowspan="2">Tanggal</th>
+                    <th colspan="4" class="bg-earning">Earning Performa</th>
+                    <th colspan="2" class="bg-header-dark">Bagi Hasil 50/50</th>
                     <th>Potongan</th><th>Biaya</th><th class="bg-kasbon">Pinjaman</th><th rowspan="2">Aksi</th>
                 </tr>
                 <tr>
@@ -134,24 +140,37 @@
 
     function checkPin() { if(document.getElementById('pinInput').value === "1234") document.getElementById('loginOverlay').style.display='none'; }
 
+    // MONITORING & DATA HANDLER
     db.ref('/').on('value', (snapshot) => {
         const data = snapshot.val();
         allData = [];
-        if (!data) return;
+        
+        // 1. Handling Nama Pekerja (Jika Kosong, Beri Default)
+        let pek = [];
+        if (data && data.daftarPekerja) {
+            pek = Array.isArray(data.daftarPekerja) ? data.daftarPekerja : Object.values(data.daftarPekerja);
+        } else {
+            // JIKA NAMA HILANG, KITA PAKSA ISI BEBERAPA NAMA AWAL
+            pek = ["Sapi 1", "Sapi 2"]; 
+            db.ref('daftarPekerja').set(pek);
+        }
 
-        const pek = data.daftarPekerja || [];
         const sel = document.getElementById('namaOrang');
         const cur = sel.value;
-        sel.innerHTML = '<option value="">-- Pilih --</option>';
-        (Array.isArray(pek) ? pek : Object.values(pek)).sort().forEach(p => { if(p) sel.innerHTML += `<option value="${p}">${p}</option>`; });
+        sel.innerHTML = '<option value="">-- Pilih Nama --</option>';
+        pek.sort().forEach(p => { if(p) sel.innerHTML += `<option value="${p}">${p}</option>`; });
         sel.value = cur;
 
-        const target = data.earningData || data;
-        Object.keys(target).forEach(key => {
-            const item = target[key];
-            if (item && item.namaOrang) allData.push({ id: key, ...item });
-        });
-        document.getElementById('syncStatus').innerText = "Terhubung ✅ (" + allData.length + ")";
+        // 2. Handling Transaksi (Logika Debug)
+        if (data) {
+            const target = data.earningData || data;
+            Object.keys(target).forEach(key => {
+                const item = target[key];
+                if (item && item.namaOrang) allData.push({ id: key, ...item });
+            });
+        }
+
+        document.getElementById('syncStatus').innerText = "Terhubung ✅ (" + allData.length + " Data)";
         muatTabel();
     });
 
@@ -173,24 +192,23 @@
         filtered.forEach(i => {
             let kotor = ((i.cegel||0)/1000000) * (i.rate||0);
             let bagiDua = (kotor - (i.guardian||0)) / 2;
-            let nMakan = i.makan || 0;
-            let hTomy = bagiDua - nMakan;
-            let hTrans = i.isPotong ? ((bagiDua + nMakan) - (i.kasbon||0)) : (bagiDua + nMakan);
+            let hTomy = bagiDua - (i.makan||0);
+            let hTrans = i.isPotong ? ((bagiDua + (i.makan||0)) - (i.kasbon||0)) : (bagiDua + (i.makan||0));
 
-            TC += (i.cegel||0); TK += kotor; TT += hTrans; TY += hTomy; TG += (i.guardian||0); TKB += (i.kasbon||0); TM += nMakan;
+            TC += (i.cegel||0); TK += kotor; TT += hTrans; TY += hTomy; TG += (i.guardian||0); TKB += (i.kasbon||0); TM += (i.makan||0);
 
             body.innerHTML += `<tr>
-                <td><b>${i.namaOrang}</b></td><td>${i.tgl}</td>
+                <td style="text-align:left; padding-left:20px"><b>${i.namaOrang}</b></td><td>${i.tgl}</td>
                 <td>${(i.cegel||0).toLocaleString()}</td><td>${((i.cegel||0)/1000000).toFixed(1)}M</td>
                 <td>${(i.rate||0).toLocaleString()}</td><td>${Math.round(kotor).toLocaleString()}</td>
                 <td style="color:#d35400; font-weight:bold">${Math.round(hTrans).toLocaleString()}</td>
                 <td style="color:#2980b9; font-weight:bold">${Math.round(hTomy).toLocaleString()}</td>
-                <td>${(i.guardian||0).toLocaleString()}</td><td>${nMakan.toLocaleString()}</td>
-                <td style="color:#e74c3c">${(i.kasbon||0).toLocaleString()}</td>
-                <td><button onclick="hapusData('${i.id}')">✕</button></td></tr>`;
+                <td>${(i.guardian||0).toLocaleString()}</td><td>${(i.makan||0).toLocaleString()}</td>
+                <td style="color:#e74c3c; font-weight:bold">${(i.kasbon||0).toLocaleString()}</td>
+                <td><button onclick="hapusData('${i.id}')" style="background:#eee; color:#333; padding:5px 10px">✕</button></td></tr>`;
         });
         
-        document.getElementById('footerTotal').innerHTML = `<td colspan="2">TOTAL</td><td>${TC.toLocaleString()}</td><td>${(TC/1000000).toFixed(1)}M</td><td>-</td><td>${Math.round(TK).toLocaleString()}</td><td>${Math.round(TT).toLocaleString()}</td><td>${Math.round(TY).toLocaleString()}</td><td>${TG.toLocaleString()}</td><td>${TM.toLocaleString()}</td><td>${TKB.toLocaleString()}</td><td></td>`;
+        document.getElementById('footerTotal').innerHTML = `<td colspan="2">TOTAL KESELURUHAN</td><td>${TC.toLocaleString()}</td><td>${(TC/1000000).toFixed(1)}M</td><td>-</td><td>${Math.round(TK).toLocaleString()}</td><td>${Math.round(TT).toLocaleString()}</td><td>${Math.round(TY).toLocaleString()}</td><td>${TG.toLocaleString()}</td><td>${TM.toLocaleString()}</td><td>${TKB.toLocaleString()}</td><td></td>`;
         updateDash(TK, TT, TKB);
     }
 
@@ -225,8 +243,8 @@
     }
     function bersih() { ["cegel","rate","guardian","kasbon"].forEach(id=>document.getElementById(id).value=''); document.getElementById('tgl').value = new Date().toISOString().split('T')[0]; document.getElementById('makan').value="10.000"; }
     function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
-    function tambahPekerja() { const n = prompt("Nama Baru:"); if(n) db.ref('daftarPekerja').once('value').then(s=>{ let d=s.val()||[]; d.push(n); db.ref('daftarPekerja').set(d); }); }
-    function hapusPekerja() { const n = document.getElementById('namaOrang').value; if(n && confirm("Hapus?")) db.ref('daftarPekerja').once('value').then(s=>{ let d=s.val()||[]; d=d.filter(p=>p!==n); db.ref('daftarPekerja').set(d); }); }
+    function tambahPekerja() { const n = prompt("Nama:"); if(n) { db.ref('daftarPekerja').once('value').then(s=>{ let d=s.val()||[]; if(!Array.isArray(d)) d=Object.values(d); d.push(n); db.ref('daftarPekerja').set(d); }); } }
+    function hapusPekerja() { const n = document.getElementById('namaOrang').value; if(n && confirm("Hapus?")) { db.ref('daftarPekerja').once('value').then(s=>{ let d=s.val()||[]; if(!Array.isArray(d)) d=Object.values(d); d=d.filter(p=>p!==n); db.ref('daftarPekerja').set(d); }); } }
     function exportData() { db.ref('/').once('value').then(snap => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(snap.val(),null,2)],{type:'application/json'})); a.download='Backup.json'; a.click(); }); }
     function importData(inp) { const file = inp.files[0]; if(!file) return; const r = new FileReader(); r.onload=(e)=>{ db.ref('/').set(JSON.parse(e.target.result)).then(()=>alert("Berhasil!")); }; r.readAsText(file); }
     
