@@ -21,16 +21,16 @@
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .stat-card { padding: 20px; border-radius: 12px; color: white; font-weight: bold; }
         
-        /* Form & Search Section */
+        /* Form & Search */
         .input-section { background: var(--card); padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; border-top: 6px solid var(--primary); }
-        .search-bar { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .search-bar { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
         .search-bar input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); }
 
         .input-group { display: flex; flex-direction: column; }
         .input-group label { font-size: 0.8em; font-weight: bold; margin-bottom: 5px; color: var(--primary); }
         input, select { padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); outline: none; }
         
-        /* Table Structure */
+        /* Table */
         .table-container { overflow-x: auto; background: var(--card); border-radius: 12px; }
         table { width: 100%; border-collapse: collapse; min-width: 1350px; font-size: 0.95em; }
         th, td { border: 1px solid var(--border); padding: 10px 8px; text-align: center; }
@@ -50,7 +50,7 @@
         .txt-makan { color: #27ae60 !important; font-weight: bold; } 
         .txt-bold { font-weight: bold; }
 
-        button { cursor: pointer; border-radius: 8px; font-weight: bold; border: none; padding: 10px 15px; }
+        button { cursor: pointer; border-radius: 8px; font-weight: bold; border: none; padding: 10px 15px; transition: 0.2s; }
         #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display:flex; justify-content:center; align-items:center; z-index:9999; }
     </style>
 </head>
@@ -59,7 +59,7 @@
 <div id="loginOverlay">
     <div style="background: white; padding: 40px; border-radius: 20px; text-align: center; width: 320px;">
         <h2 style="color:#333; margin:0 0 20px 0;">🔐 FARMHOUSE LOGIN</h2>
-        <input type="password" id="pinInput" style="text-align:center; width:100%; margin-bottom:20px; font-size:2em; border: 2px solid #ddd;">
+        <input type="password" id="pinInput" placeholder="Masukkan PIN" style="text-align:center; width:100%; margin-bottom:20px; font-size:2em; border: 2px solid #ddd; border-radius:10px;">
         <button style="background:#27ae60; color:white; width:100%; padding:15px;" onclick="checkPin()">MASUK</button>
     </div>
 </div>
@@ -75,7 +75,7 @@
             <button style="background:#3498db; color:white" onclick="exportData()">💾 Backup</button>
             <button style="background:#2ecc71; color:white" onclick="document.getElementById('importFile').click()">📂 Restore</button>
             <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(this)">
-            <button style="background:#7f8c8d; color:white" onclick="location.reload()">🔒 Keluar</button>
+            <button style="background:#7f8c8d; color:white" onclick="logout()">🔒 Keluar</button>
         </div>
     </div>
 
@@ -152,13 +152,35 @@
     const db = firebase.database();
     let allData = [];
 
-    function checkPin() { if(document.getElementById('pinInput').value === "1234") document.getElementById('loginOverlay').style.display='none'; }
+    // FUNGSI CEK STATUS LOGIN SAAT REFRESH
+    window.onload = function() {
+        if(localStorage.getItem("isLoggedIn") === "true") {
+            document.getElementById('loginOverlay').style.display = 'none';
+        }
+        document.getElementById('tgl').value = new Date().toISOString().split('T')[0];
+    };
 
+    function checkPin() { 
+        if(document.getElementById('pinInput').value === "1234") {
+            localStorage.setItem("isLoggedIn", "true"); // Simpan status login
+            document.getElementById('loginOverlay').style.display = 'none';
+        } else {
+            alert("PIN Salah!");
+        }
+    }
+
+    function logout() {
+        if(confirm("Keluar dari aplikasi?")) {
+            localStorage.removeItem("isLoggedIn"); // Hapus status login
+            location.reload();
+        }
+    }
+
+    // REALTIME DATABASE
     db.ref('/').on('value', (snapshot) => {
         const data = snapshot.val();
         allData = [];
         const statusEl = document.getElementById('syncStatus');
-
         if (!data) {
             statusEl.innerHTML = "📍 Cluster Green Savana - Bogor ⚠️";
             return;
@@ -175,7 +197,6 @@
         const target = data.earningData || data;
         Object.keys(target).forEach(key => {
             const item = target[key];
-            // Tambahkan flag 'isRoot' untuk identifikasi lokasi hapus
             if (item && item.namaOrang) {
                 allData.push({ id: key, isRoot: !data.earningData, ...item });
             }
@@ -221,7 +242,7 @@
                 <td>${(i.guardian||0).toLocaleString()}</td>
                 <td class="txt-makan">${nMakan.toLocaleString()}</td>
                 <td class="txt-kasbon">${(i.kasbon||0).toLocaleString()}</td>
-                <td><button onclick="hapusData('${i.id}', ${i.isRoot})" style="background:rgba(200,200,200,0.2); color:inherit; border-radius:4px;">✕</button></td>
+                <td><button onclick="hapusData('${i.id}', ${i.isRoot})" style="background:rgba(200,200,200,0.1); color:inherit;">✕</button></td>
             </tr>`;
         });
         
@@ -231,11 +252,8 @@
 
     function hapusData(id, isRoot) { 
         if(confirm("Hapus baris ini?")) {
-            // Logika deteksi folder
             const path = isRoot ? id : 'earningData/' + id;
-            db.ref(path).remove()
-              .then(() => console.log("Hapus berhasil"))
-              .catch((err) => alert("Gagal hapus: " + err.message));
+            db.ref(path).remove();
         }
     }
 
@@ -267,13 +285,12 @@
         <div class="stat-card" style="background:#e67e22"><div>TRANSFER</div><div style="font-size:1.6em">Rp ${Math.round(t).toLocaleString()}</div></div>
         <div class="stat-card" style="background:#c0392b"><div>KASBON</div><div style="font-size:1.6em">Rp ${Math.round(kb).toLocaleString()}</div></div>`;
     }
-    function bersih() { ["cegel","rate","guardian","kasbon"].forEach(id=>document.getElementById(id).value=''); document.getElementById('tgl').value = new Date().toISOString().split('T')[0]; document.getElementById('makan').value="10.000"; }
+    function bersih() { ["cegel","rate","guardian","kasbon"].forEach(id=>document.getElementById(id).value=''); document.getElementById('makan').value="10.000"; }
     function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
     function tambahPekerja() { const n = prompt("Nama:"); if(n) db.ref('daftarPekerja').push(n); }
     function hapusPekerja() { const n = document.getElementById('namaOrang').value; if(n && confirm("Hapus?")) { db.ref('daftarPekerja').once('value').then(s => { s.forEach(c => { if(c.val() === n) c.ref.remove(); }); }); } }
     function exportData() { db.ref('/').once('value').then(snap => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(snap.val(),null,2)],{type:'application/json'})); a.download='Backup_FB.json'; a.click(); }); }
     function importData(inp) { const file = inp.files[0]; if(!file) return; const r = new FileReader(); r.onload=(e)=>{ db.ref('/').set(JSON.parse(e.target.result)).then(()=>alert("Berhasil!")); }; r.readAsText(file); }
-    document.getElementById('tgl').value = new Date().toISOString().split('T')[0];
 </script>
 </body>
 </html>
