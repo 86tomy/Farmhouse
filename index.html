@@ -3,148 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Farmhouse Manager Pro - Edition 2026</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Farmhouse Cloud Sync - Bogor</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+
     <style>
-        /* --- CSS DASAR --- */
+        /* --- CSS TETAP SAMA --- */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background: #f0f2f5; color: #333; transition: 0.3s; }
         .container { max-width: 1400px; margin: auto; }
-        
         .header-app { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 20px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .stat-card { padding: 20px; border-radius: 12px; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        
-        .chart-controls { margin-bottom: 10px; display: flex; gap: 10px; align-items: center; }
-        .btn-chart { background: #8e44ad; color: white; padding: 12px 20px; font-size: 1em; border-radius: 8px; cursor: pointer; border: none; font-weight: bold; }
-
-        .input-section { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; border-top: 5px solid #27ae60; }
-        .input-section.edit-mode { border-top: 5px solid #f39c12; background: #fffdf5; }
-        
-        .filter-section { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-
-        .input-group { display: flex; flex-direction: column; flex: 1; min-width: 180px; }
+        .input-section { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; align-items: center; border-top: 5px solid #27ae60; }
+        .input-group { display: flex; flex-direction: column; width: 100%; }
         .input-group label { font-size: 0.85em; font-weight: 600; margin-bottom: 5px; color: #555; }
-        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1em; outline: none; background: white; }
-
-        .chart-container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; height: 350px; display: none; }
-
+        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1em; outline: none; background: white; width: 100%; box-sizing: border-box; }
+        .pekerja-group { grid-column: span 2; }
+        .filter-container { margin-bottom: 15px; background: white; padding: 15px; border-radius: 12px; display: flex; flex-wrap: wrap; gap: 15px; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .table-container { overflow-x: auto; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         table { width: 100%; border-collapse: collapse; min-width: 1200px; }
         th, td { border: 1px solid #eee; padding: 12px; text-align: center; }
-        th { background: #f8f9fa; font-weight: 600; font-size: 0.9em; }
-        
+        th { background: #f8f9fa; font-size: 0.85em; color: #333; }
+        tbody tr:nth-child(even) { background-color: #f9fbf9 !important; }
+        tbody tr:nth-child(odd) { background-color: #ffffff !important; }
+        tbody tr:hover { background-color: #f1f1f1 !important; transition: 0.2s; }
         .bg-earning { background-color: #27ae60 !important; color: white; }
         .bg-kasbon { background-color: #e74c3c !important; color: white; }
         .row-total { background-color: #2c3e50 !important; color: white !important; font-weight: bold; }
-        
         button { cursor: pointer; border-radius: 8px; font-weight: bold; border: none; padding: 10px 15px; transition: 0.2s; }
-        .btn-add { background: #27ae60; color: white; }
-        .btn-danger { background: #c0392b; color: white; }
-
-        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .login-box { background: white; padding: 30px; border-radius: 15px; text-align: center; width: 320px; }
-
-        /* --- DARK MODE --- */
+        .btn-add { background: #27ae60; color: white; height: 42px; width: 100%; }
         body.dark-mode { background: #121212; color: #e0e0e0; }
-        .dark-mode .header-app, .dark-mode .input-section, .dark-mode .filter-section, .dark-mode .chart-container, .dark-mode .table-container, .dark-mode .login-box { background: #1e1e1e !important; color: #e0e0e0; }
+        .dark-mode .header-app, .dark-mode .input-section, .dark-mode .table-container, .dark-mode .filter-container { background: #1e1e1e !important; color: #e0e0e0; }
         .dark-mode input, .dark-mode select { background: #2d2d2d; border-color: #444; color: white; }
-        .dark-mode th { background: #252525; color: #bbb; border-color: #333; }
-        .dark-mode td { border-color: #333; }
-
-        @media print { .input-section, .filter-section, .action-buttons, .chart-controls, #lockBtn, th:last-child, td:last-child { display: none !important; } }
     </style>
 </head>
 <body>
 
-<div id="loginOverlay">
-    <div class="login-box">
-        <h2 style="margin-bottom:10px">🔐 Terkunci</h2>
-        <input type="password" id="pinInput" placeholder="PIN" style="text-align:center; width:100%; margin-bottom:15px; font-size:1.5em">
-        <button class="btn-add" style="width:100%; padding:15px" onclick="checkPin()">BUKA AKSES</button>
+<div id="loginOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 9999;">
+    <div style="background: white; padding: 30px; border-radius: 15px; text-align: center; width: 320px;">
+        <h2 style="margin-bottom:10px; color: #333;">🔐 Akses Terbatas</h2>
+        <input type="password" id="pinInput" placeholder="Masukkan PIN" style="text-align:center; width:100%; margin-bottom:15px; font-size:1.5em; border: 1px solid #ddd;">
+        <button class="btn-add" onclick="checkPin()">MASUK</button>
     </div>
 </div>
 
 <div class="container">
     <div class="header-app">
-        <h2>Farmhouse Manager Pro</h2>
+        <div>
+            <h2 style="margin:0">Farmhouse Cloud Sync</h2>
+            <small>📍 Bogor (Status: <span id="syncStatus">...</span>)</small>
+        </div>
         <div class="action-buttons">
-            <button id="darkModeBtn" style="background:#2c3e50; color:white" onclick="toggleDarkMode()">🌙 Mode</button>
-            <button style="background:#3498db; color:white" onclick="eksporData()">💾 Backup</button>
-            <button style="background:#2ecc71; color:white" onclick="document.getElementById('importFile').click()">📂 Restore</button>
-            <button class="btn-danger" onclick="resetSemuaData()">⚠️ Reset</button>
-            <button id="lockBtn" style="background:#7f8c8d; color:white" onclick="location.reload()">🔒</button>
-            <input type="file" id="importFile" style="display:none" accept=".json" onchange="imporData(this)">
+            <button style="background:#2c3e50; color:white" onclick="toggleDarkMode()">🌙 Mode</button>
+            <button style="background:#3498db; color:white" onclick="exportFromFirebase()">💾 Backup Cloud</button>
+            <button style="background:#2ecc71; color:white" onclick="document.getElementById('importFile').click()">📂 Restore Cloud</button>
+            <input type="file" id="importFile" style="display:none" accept=".json" onchange="importToFirebase(this)">
+            <button style="background:#7f8c8d; color:white" onclick="location.reload()">🔒 Keluar</button>
         </div>
     </div>
 
     <div id="summaryStats" class="stats-grid"></div>
 
-    <div class="chart-controls">
-        <button class="btn-chart" onclick="muatGrafik()">📊 Tampilkan / Update Grafik</button>
-        <button id="btnHideChart" style="background:#95a5a6; color:white; display:none;" onclick="toggleChart(false)">Tutup Grafik</button>
-    </div>
-
-    <div id="chartWrapper" class="chart-container">
-        <canvas id="earningChart"></canvas>
-    </div>
-
-    <input type="hidden" id="editId">
     <div class="input-section" id="formInput">
-        <div class="input-group">
+        <div class="input-group pekerja-group">
             <label>Nama Pekerja</label>
-            <div style="display: flex; gap: 5px;">
-                <select id="namaOrang" style="flex: 1;">
-                    <option value="">-- Pilih Nama --</option>
-                </select>
-                <button type="button" onclick="tambahPekerjaBaru()" style="background:#3498db; color:white; padding: 0 12px; border-radius: 8px;">+</button>
+            <div style="display: flex; gap: 8px;">
+                <select id="namaOrang" style="flex: 1;"></select>
+                <button type="button" onclick="tambahPekerjaBaru()" style="background:#3498db; color:white; width: 40px;">+</button>
+                <button type="button" onclick="editNamaPekerja()" style="background:#f39c12; color:white; width: 40px;">✎</button>
+                <button type="button" onclick="hapusPekerjaDaftar()" style="background:#e74c3c; color:white; width: 40px;">-</button>
             </div>
         </div>
         <div class="input-group"><label>Tanggal</label><input type="date" id="tgl"></div>
-        <div class="input-group"><label>Cegel</label><input type="text" id="cegel" placeholder="Cegel" onkeyup="formatInput(this)"></div>
-        <div class="input-group"><label>Rate</label><input type="text" id="rate" placeholder="Rate" onkeyup="formatInput(this)"></div>
-        <div class="input-group"><label>Guardian</label><input type="text" id="guardian" placeholder="Guardian" onkeyup="formatInput(this)"></div>
-        <div class="input-group"><label>Makan</label><input type="text" id="makan" value="10.000" placeholder="Makan" onkeyup="formatInput(this)"></div>
-        <div class="input-group"><label>Kasbon</label><input type="text" id="kasbon" placeholder="Kasbon" onkeyup="formatInput(this)"></div>
+        <div class="input-group"><label>Cegel</label><input type="text" id="cegel" placeholder="0" onkeyup="formatInput(this)"></div>
+        <div class="input-group"><label>Rate</label><input type="text" id="rate" placeholder="0" onkeyup="formatInput(this)"></div>
+        <div class="input-group"><label>Guardian</label><input type="text" id="guardian" placeholder="0" onkeyup="formatInput(this)"></div>
+        <div class="input-group"><label>Makan</label><input type="text" id="makan" value="10.000" onkeyup="formatInput(this)"></div>
         <div class="input-group">
-            <label>Opsi</label>
-            <label style="font-size:0.8em; color:#e74c3c; cursor: pointer;"><input type="checkbox" id="potongKasbon"> Potong Transfer?</label>
+            <label>Kasbon</label>
+            <input type="text" id="kasbon" placeholder="0" onkeyup="formatInput(this)">
+            <div style="display:flex; align-items:center; gap:5px; margin-top:5px">
+                <input type="checkbox" id="potongKasbon"><label for="potongKasbon" style="font-size:0.8em; color:#e74c3c; font-weight:bold">Potong?</label>
+            </div>
         </div>
-        <button class="btn-add" id="btnAdd" onclick="simpanData()">Simpan Data</button>
-        <button style="background:#f39c12; color:white; display:none" id="btnUpdate" onclick="updateData()">Update</button>
-        <button style="background:#95a5a6; color:white; display:none" id="btnCancel" onclick="batalEdit()">Batal</button>
+        <div class="input-group">
+            <input type="hidden" id="editId">
+            <button class="btn-add" id="btnAdd" onclick="simpanData()">SIMPAN</button>
+            <button style="background:#f39c12; color:white; display:none; height: 42px;" id="btnUpdate" onclick="updateData()">UPDATE</button>
+            <button style="background:#95a5a6; color:white; display:none; margin-top:5px" id="btnCancel" onclick="batalEdit()">BATAL</button>
+        </div>
     </div>
 
-    <div class="filter-section">
-        <div class="input-group"><label>Cari Nama</label><input type="text" id="searchInput" onkeyup="muatData()" placeholder="🔍 Nama..."></div>
-        <div class="input-group"><label>Dari Tanggal</label><input type="date" id="fMulai" onchange="muatData()"></div>
-        <div class="input-group"><label>Sampai</label><input type="date" id="fSelesai" onchange="muatData()"></div>
-        <button onclick="resetFilter()" style="background:#ecf0f1; border:1px solid #ccc; color:#333">Reset Filter</button>
+    <div class="filter-container">
+        <input type="text" id="cariNama" class="search-box" placeholder="🔍 Cari Nama..." onkeyup="muatDataTampilan()">
+        <input type="date" id="filterTglMulai" onchange="muatDataTampilan()" style="width:150px">
+        <input type="date" id="filterTglAkhir" onchange="muatDataTampilan()" style="width:150px">
+        <button onclick="resetFilter()" style="background:#95a5a6; color:white">Reset</button>
     </div>
 
     <div class="table-container">
         <table>
             <thead>
                 <tr>
-                    <th rowspan="2">Nama</th>
-                    <th rowspan="2">Tanggal</th>
+                    <th rowspan="2">Nama</th><th rowspan="2">Tanggal</th>
                     <th colspan="4" class="bg-earning">Earning</th>
                     <th colspan="2" style="background:#34495e; color:white">Bagi 50/50</th>
                     <th style="background:#f1c40f; color:#000">Guard</th>
                     <th style="background:#27ae60; color:#fff">Makan</th>
-                    <th class="bg-kasbon">Kasbon</th>
-                    <th rowspan="2">Aksi</th>
+                    <th class="bg-kasbon">Kasbon</th><th rowspan="2">Aksi</th>
                 </tr>
                 <tr>
-                    <th class="bg-earning">Cegel</th>
-                    <th class="bg-earning">M</th>
-                    <th class="bg-earning">Rate</th>
-                    <th class="bg-earning">Rupiah</th>
-                    <th style="background:#d35400; color:white">Transfer</th>
-                    <th style="background:#2980b9; color:white">Tomy</th>
-                    <th style="background:#f1c40f; color:#000">DE+DD</th>
-                    <th style="background:#27ae60; color:#fff">U. Makan</th>
-                    <th class="bg-kasbon">Harian</th>
+                    <th class="bg-earning">Cegel</th><th class="bg-earning">M</th><th class="bg-earning">Rate</th><th class="bg-earning">Rupiah</th>
+                    <th style="background:#d35400; color:white">Transfer</th><th style="background:#2980b9; color:white">Tomy</th>
+                    <th style="background:#f1c40f; color:#000">Guard</th><th style="background:#27ae60; color:#fff">Makan</th><th class="bg-kasbon">Harian</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -154,238 +126,177 @@
 </div>
 
 <script>
-    const APP_PIN = "1234"; 
-    let myChart = null;
-    let daftarPekerja = JSON.parse(localStorage.getItem('daftarPekerja')) || ["Pekerja 1"];
+    // --- FIREBASE CONFIG (DATA ANDA) ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyBphHlavM7eC56wLJ1CUcSi4-yc5YwLcl0",
+        authDomain: "farmhouse-dd33a.firebaseapp.com",
+        databaseURL: "https://farmhouse-dd33a-default-rtdb.firebaseio.com",
+        projectId: "farmhouse-dd33a",
+        storageBucket: "farmhouse-dd33a.firebasestorage.app",
+        messagingSenderId: "527376522624",
+        appId: "1:527376522624:web:465177a2721c104551f565",
+        measurementId: "G-5SZTMQKDCZ"
+    };
 
-    function checkPin() {
-        if(document.getElementById('pinInput').value === APP_PIN) {
-            document.getElementById('loginOverlay').style.display = 'none';
-        } else { alert("PIN Salah!"); }
-    }
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const earningRef = db.ref('earningData');
+    const pekerjaRef = db.ref('daftarPekerja');
 
-    function toggleDarkMode() {
-        const isDark = document.body.classList.toggle('dark-mode');
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    }
+    let allData = [];
 
-    function updateDropdownPekerja() {
+    // Login PIN
+    function checkPin() { if(document.getElementById('pinInput').value === "1234") document.getElementById('loginOverlay').style.display = 'none'; else alert("PIN Salah!"); }
+
+    // Sync Realtime
+    earningRef.on('value', (snapshot) => {
+        allData = [];
+        snapshot.forEach((child) => { allData.push({ id: child.key, ...child.val() }); });
+        document.getElementById('syncStatus').innerText = "Terhubung ✅";
+        muatDataTampilan();
+    });
+
+    pekerjaRef.on('value', (snapshot) => {
+        const d = snapshot.val() || ["Pekerja 1"];
         const select = document.getElementById('namaOrang');
-        const val = select.value;
+        const cur = select.value;
         select.innerHTML = '<option value="">-- Pilih Nama --</option>';
-        daftarPekerja.sort().forEach(p => {
-            select.innerHTML += `<option value="${p}">${p}</option>`;
+        (Array.isArray(d) ? d : Object.values(d)).sort().forEach(p => { select.innerHTML += `<option value="${p}">${p}</option>`; });
+        if(cur) select.value = cur;
+    });
+
+    // --- FITUR BARU: BACKUP & RESTORE KE CLOUD ---
+    function exportFromFirebase() {
+        if(allData.length === 0) return alert("Tidak ada data untuk di-backup!");
+        
+        // Ambil data pekerja juga agar backup lengkap
+        pekerjaRef.once('value').then(snap => {
+            const backupObj = {
+                earningData: {},
+                daftarPekerja: snap.val() || []
+            };
+            
+            // Format ulang agar sesuai dengan struktur Firebase (pake ID sebagai key)
+            allData.forEach(item => {
+                const {id, ...rest} = item;
+                backupObj.earningData[id] = rest;
+            });
+
+            const blob = new Blob([JSON.stringify(backupObj, null, 2)], {type: 'application/json'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `Backup_Cloud_Bogor_${new Date().toLocaleDateString()}.json`;
+            a.click();
         });
-        if(val) select.value = val;
     }
 
-    function tambahPekerjaBaru() {
-        const n = prompt("Nama Pekerja Baru:");
-        if (n && n.trim() !== "") {
-            if (!daftarPekerja.includes(n.trim())) {
-                daftarPekerja.push(n.trim());
-                localStorage.setItem('daftarPekerja', JSON.stringify(daftarPekerja));
-                updateDropdownPekerja();
-                document.getElementById('namaOrang').value = n.trim();
-            }
-        }
-    }
+    function importToFirebase(input) {
+        const file = input.files[0];
+        if(!file) return;
+        if(!confirm("⚠️ PERINGATAN: Mengimpor data akan menggabungkan atau menimpa data Cloud saat ini. Lanjutkan?")) return;
 
-    function toggleChart(s) {
-        document.getElementById('chartWrapper').style.display = s ? 'block' : 'none';
-        document.getElementById('btnHideChart').style.display = s ? 'inline-block' : 'none';
-    }
-
-    function muatGrafik() {
-        let db = JSON.parse(localStorage.getItem('earningData')) || [];
-        if (db.length === 0) return alert("Belum ada data.");
-        toggleChart(true);
-        const ctx = document.getElementById('earningChart').getContext('2d');
-        const groups = {};
-        db.forEach(x => {
-            groups[x.namaOrang] = (groups[x.namaOrang] || 0) + ((x.cegel/1000000) * x.rate);
-        });
-        const isDark = document.body.classList.contains('dark-mode');
-        if(myChart) myChart.destroy();
-        myChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: Object.keys(groups),
-                datasets: [{ label: 'Omzet per Orang (Rp)', data: Object.values(groups), backgroundColor: '#8e44ad' }]
-            },
-            options: { 
-                responsive: true, maintainAspectRatio: false,
-                scales: {
-                    x: { ticks: { color: isDark ? '#bbb' : '#666' } },
-                    y: { ticks: { color: isDark ? '#bbb' : '#666' } }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importedData = JSON.parse(e.target.result);
+                
+                // Jika file backup mengandung struktur lengkap (earning + pekerja)
+                if(importedData.earningData) {
+                    db.ref('/').update(importedData);
+                } else {
+                    // Jika file hanya berisi array data (format lama)
+                    alert("Format lama terdeteksi. Mengonversi...");
+                    importedData.forEach(item => earningRef.push(item));
                 }
+                alert("Data berhasil diunggah ke Cloud!");
+            } catch (err) {
+                alert("Gagal membaca file: " + err.message);
             }
+        };
+        reader.readAsText(file);
+    }
+
+    // CRUD Cloud
+    function simpanData() {
+        const n = document.getElementById('namaOrang').value;
+        const cegel = parseRaw(document.getElementById('cegel').value);
+        if(!n) return alert("Pilih Nama!");
+        earningRef.push({
+            namaOrang: n, tgl: document.getElementById('tgl').value,
+            cegel: cegel, rate: parseRaw(document.getElementById('rate').value),
+            guardian: parseRaw(document.getElementById('guardian').value),
+            makan: parseRaw(document.getElementById('makan').value),
+            kasbon: parseRaw(document.getElementById('kasbon').value),
+            isPotong: document.getElementById('potongKasbon').checked
         });
+        BersihkanForm();
     }
 
-    function formatInput(obj) {
-        let v = obj.value.replace(/[^,\d]/g, '').toString();
-        let s = v.split(',');
-        let si = s[0].length % 3;
-        let r = s[0].substr(0, si);
-        let ri = s[0].substr(si).match(/\d{3}/gi);
-        if (ri) { r += (si ? '.' : '') + ri.join('.'); }
-        obj.value = s[1] != undefined ? r + ',' + s[1] : r;
+    function updateData() {
+        const id = document.getElementById('editId').value;
+        db.ref('earningData/' + id).update({
+            namaOrang: document.getElementById('namaOrang').value,
+            tgl: document.getElementById('tgl').value,
+            cegel: parseRaw(document.getElementById('cegel').value),
+            rate: parseRaw(document.getElementById('rate').value),
+            guardian: parseRaw(document.getElementById('guardian').value),
+            makan: parseRaw(document.getElementById('makan').value),
+            kasbon: parseRaw(document.getElementById('kasbon').value),
+            isPotong: document.getElementById('potongKasbon').checked
+        });
+        batalEdit();
     }
 
-    function parseRaw(s) { 
-        if(!s) return 0;
-        return parseFloat(s.toString().replace(/\./g, '').replace(',', '.')) || 0; 
-    }
-    
-    function formatRupiahDisplay(n) { return "Rp " + Math.round(n).toLocaleString('id-ID'); }
+    function hapusData(id) { if(confirm("Hapus dari Cloud?")) db.ref('earningData/' + id).remove(); }
 
-    function muatData() {
+    // Helpers & Logic Tampilan
+    function muatDataTampilan() {
         const body = document.getElementById('tableBody');
-        const filter = document.getElementById('searchInput').value.toLowerCase();
-        const start = document.getElementById('fMulai').value;
-        const end = document.getElementById('fSelesai').value;
+        const kataKunci = document.getElementById('cariNama').value.toLowerCase();
+        const tMulai = document.getElementById('filterTglMulai').value;
+        const tAkhir = document.getElementById('filterTglAkhir').value;
         body.innerHTML = '';
-        let db = JSON.parse(localStorage.getItem('earningData')) || [];
-        db.sort((a,b) => new Date(b.tgl) - new Date(a.tgl));
+
+        let filtered = allData.filter(i => {
+            const mNama = kataKunci === "" || (i.namaOrang && i.namaOrang.toLowerCase().includes(kataKunci));
+            let mTgl = true;
+            if (tMulai) mTgl = mTgl && (i.tgl >= tMulai);
+            if (tAkhir) mTgl = mTgl && (i.tgl <= tAkhir);
+            return mNama && mTgl;
+        });
+
+        filtered.sort((a,b) => new Date(b.tgl) - new Date(a.tgl));
         let T_Cegel=0, T_Kotor=0, T_Transfer=0, T_Tomy=0, T_Guard=0, T_Kasbon=0, T_Makan=0;
 
-        db.forEach(i => {
-            if((!start || i.tgl >= start) && (!end || i.tgl <= end) && i.namaOrang.toLowerCase().includes(filter)) {
-                let rK = (i.cegel/1000000) * i.rate;
-                let bagiDua = (rK - i.guardian) / 2;
-                
-                // LOGIKA MAKAN
-                let nMakan = i.makan || 0;
-                let hTomy = bagiDua - nMakan; // Dikurangi dari Tomy
-                let baseTransfer = bagiDua + nMakan; // Ditambah ke Transfer
-                
-                let hT = i.isPotong ? (baseTransfer - i.kasbon) : baseTransfer;
+        filtered.forEach(i => {
+            let rK = (i.cegel/1000000) * i.rate;
+            let bagiDua = (rK - i.guardian) / 2;
+            let nMakan = i.makan || 0;
+            let hTomy = bagiDua - nMakan;
+            let hT = i.isPotong ? ((bagiDua + nMakan) - i.kasbon) : (bagiDua + nMakan);
+            T_Cegel += i.cegel; T_Kotor += rK; T_Transfer += hT; T_Tomy += hTomy; T_Guard += i.guardian; T_Kasbon += i.kasbon; T_Makan += nMakan;
 
-                T_Cegel += i.cegel; T_Kotor += rK; T_Transfer += hT; T_Tomy += hTomy; T_Guard += i.guardian; T_Kasbon += i.kasbon; T_Makan += nMakan;
-
-                body.innerHTML += `<tr>
-                    <td><b>${i.namaOrang}</b></td>
-                    <td>${i.tgl}</td>
-                    <td>${i.cegel.toLocaleString('id-ID')}</td>
-                    <td>${(i.cegel/1000000).toFixed(1)}M</td>
-                    <td>${formatRupiahDisplay(i.rate)}</td>
-                    <td>${formatRupiahDisplay(rK)}</td>
-                    <td style="font-weight:bold; color:${hT<0?'#e74c3c':''}">${formatRupiahDisplay(hT)}</td>
-                    <td>${formatRupiahDisplay(hTomy)}</td>
-                    <td>${formatRupiahDisplay(i.guardian)}</td>
-                    <td style="color:#27ae60">${formatRupiahDisplay(nMakan)}</td>
-                    <td style="color:#e74c3c">${formatRupiahDisplay(i.kasbon)}</td>
-                    <td>
-                        <button style="background:#f39c12; color:white; padding:4px 8px" onclick="editRecord(${i.id})">✎</button> 
-                        <button style="background:#e74c3c; color:white; padding:4px 8px" onclick="hapusData(${i.id})">✕</button>
-                    </td>
-                </tr>`;
-            }
+            body.innerHTML += `<tr>
+                <td><b>${i.namaOrang}</b></td><td>${i.tgl}</td><td>${i.cegel.toLocaleString('id-ID')}</td><td>${(i.cegel/1000000).toFixed(1)}M</td><td>${formatRupiahDisplay(i.rate)}</td><td>${formatRupiahDisplay(rK)}</td><td style="font-weight:bold">${formatRupiahDisplay(hT)}</td><td>${formatRupiahDisplay(hTomy)}</td><td>${formatRupiahDisplay(i.guardian)}</td><td style="color:#27ae60">${formatRupiahDisplay(nMakan)}</td><td style="color:#e74c3c">${formatRupiahDisplay(i.kasbon)}</td><td><button style="background:#f39c12; color:white; padding:4px 8px" onclick="editRecord('${i.id}')">✎</button> <button style="background:#e74c3c; color:white; padding:4px 8px" onclick="hapusData('${i.id}')">✕</button></td></tr>`;
         });
         document.getElementById('footerTotal').innerHTML = `<td colspan="2">TOTAL</td><td>${T_Cegel.toLocaleString('id-ID')}</td><td>${(T_Cegel/1000000).toFixed(1)}M</td><td>-</td><td>${formatRupiahDisplay(T_Kotor)}</td><td>${formatRupiahDisplay(T_Transfer)}</td><td>${formatRupiahDisplay(T_Tomy)}</td><td>${formatRupiahDisplay(T_Guard)}</td><td>${formatRupiahDisplay(T_Makan)}</td><td>${formatRupiahDisplay(T_Kasbon)}</td><td></td>`;
         updateDashboard(T_Kotor, T_Transfer, T_Kasbon);
     }
 
-    function updateDashboard(k, t, kb) {
-        document.getElementById('summaryStats').innerHTML = `<div class="stat-card" style="background:#27ae60"><div>Omzet Kotor</div><div style="font-size:1.5em; font-weight:bold">${formatRupiahDisplay(k)}</div></div><div class="stat-card" style="background:#2980b9"><div>Total Transfer</div><div style="font-size:1.5em; font-weight:bold">${formatRupiahDisplay(t)}</div></div><div class="stat-card" style="background:#e67e22"><div>Total Kasbon</div><div style="font-size:1.5em; font-weight:bold">${formatRupiahDisplay(kb)}</div></div>`;
-    }
+    function formatInput(obj) { let v = obj.value.replace(/[^,\d]/g, '').toString(); let s = v.split(','); let si = s[0].length % 3; let r = s[0].substr(0, si); let ri = s[0].substr(si).match(/\d{3}/gi); if (ri) { r += (si ? '.' : '') + ri.join('.'); } obj.value = s[1] != undefined ? r + ',' + s[1] : r; }
+    function parseRaw(s) { if(!s) return 0; return parseFloat(s.toString().replace(/\./g, '').replace(',', '.')) || 0; }
+    function formatRupiahDisplay(n) { return "Rp " + Math.round(n).toLocaleString('id-ID'); }
+    function updateDashboard(k, t, kb) { document.getElementById('summaryStats').innerHTML = `<div class="stat-card" style="background:#27ae60"><div>Omzet Kotor</div><div style="font-size:1.5em; font-weight:bold">${formatRupiahDisplay(k)}</div></div><div class="stat-card" style="background:#2980b9"><div>Total Transfer</div><div style="font-size:1.5em; font-weight:bold">${formatRupiahDisplay(t)}</div></div><div class="stat-card" style="background:#e67e22"><div>Total Kasbon</div><div style="font-size:1.5em; font-weight:bold">${formatRupiahDisplay(kb)}</div></div>`; }
+    function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
+    function resetFilter() { document.getElementById('cariNama').value = ''; document.getElementById('filterTglMulai').value = ''; document.getElementById('filterTglAkhir').value = ''; muatDataTampilan(); }
+    function BersihkanForm() { ["cegel", "rate", "guardian", "kasbon", "editId"].forEach(id => { document.getElementById(id).value = ''; }); document.getElementById('tgl').value = new Date().toISOString().split('T')[0]; document.getElementById('makan').value = '10.000'; document.getElementById('potongKasbon').checked = false; }
+    function editRecord(id) { const i = allData.find(x => x.id === id); document.getElementById('editId').value = i.id; document.getElementById('namaOrang').value = i.namaOrang; document.getElementById('tgl').value = i.tgl; document.getElementById('cegel').value = i.cegel.toLocaleString('id-ID'); document.getElementById('rate').value = i.rate.toLocaleString('id-ID'); document.getElementById('guardian').value = i.guardian.toLocaleString('id-ID'); document.getElementById('makan').value = (i.makan || 0).toLocaleString('id-ID'); document.getElementById('kasbon').value = i.kasbon.toLocaleString('id-ID'); document.getElementById('potongKasbon').checked = i.isPotong; document.getElementById('btnAdd').style.display = 'none'; document.getElementById('btnUpdate').style.display = 'inline-block'; document.getElementById('btnCancel').style.display = 'inline-block'; window.scrollTo({top: 0, behavior: 'smooth'}); }
+    function batalEdit() { BersihkanForm(); document.getElementById('btnAdd').style.display = 'inline-block'; document.getElementById('btnUpdate').style.display = 'none'; document.getElementById('btnCancel').style.display = 'none'; }
+    function tambahPekerjaBaru() { const n = prompt("Nama Pekerja Baru:"); if (n) { pekerjaRef.once('value').then(s => { let d = s.val() || []; if(!Array.isArray(d)) d = Object.values(d); d.push(n.trim()); pekerjaRef.set(d); }); } }
+    function editNamaPekerja() { const select = document.getElementById('namaOrang'); const lama = select.value; if(!lama) return alert("Pilih nama!"); const baru = prompt("Ubah nama:", lama); if(baru) { pekerjaRef.once('value').then(s => { let d = s.val(); if(!Array.isArray(d)) d = Object.values(d); const idx = d.indexOf(lama); d[idx] = baru.trim(); pekerjaRef.set(d); }); } }
+    function hapusPekerjaDaftar() { const n = document.getElementById('namaOrang').value; if(n && confirm("Hapus dari daftar?")) { pekerjaRef.once('value').then(s => { let d = s.val(); if(!Array.isArray(d)) d = Object.values(d); d = d.filter(p => p !== n); pekerjaRef.set(d); }); } }
 
-    function simpanData() {
-        const n = document.getElementById('namaOrang').value;
-        if(!n) return alert("Pilih Nama!");
-        const db = JSON.parse(localStorage.getItem('earningData')) || [];
-        db.push({ 
-            id: Date.now(), 
-            namaOrang: n, 
-            tgl: document.getElementById('tgl').value, 
-            cegel: parseRaw(document.getElementById('cegel').value), 
-            rate: parseRaw(document.getElementById('rate').value), 
-            guardian: parseRaw(document.getElementById('guardian').value), 
-            makan: parseRaw(document.getElementById('makan').value), 
-            kasbon: parseRaw(document.getElementById('kasbon').value), 
-            isPotong: document.getElementById('potongKasbon').checked 
-        });
-        localStorage.setItem('earningData', JSON.stringify(db));
-        BersihkanForm(); muatData();
-    }
-
-    function editRecord(id) {
-        const item = JSON.parse(localStorage.getItem('earningData')).find(i => i.id === id);
-        document.getElementById('editId').value = item.id;
-        document.getElementById('namaOrang').value = item.namaOrang;
-        document.getElementById('tgl').value = item.tgl;
-        document.getElementById('cegel').value = item.cegel.toLocaleString('id-ID');
-        document.getElementById('rate').value = item.rate.toLocaleString('id-ID');
-        document.getElementById('guardian').value = item.guardian.toLocaleString('id-ID');
-        document.getElementById('makan').value = (item.makan || 0).toLocaleString('id-ID');
-        document.getElementById('kasbon').value = item.kasbon.toLocaleString('id-ID');
-        document.getElementById('potongKasbon').checked = item.isPotong;
-        document.getElementById('btnAdd').style.display = 'none';
-        document.getElementById('btnUpdate').style.display = 'inline-block';
-        document.getElementById('btnCancel').style.display = 'inline-block';
-        document.getElementById('formInput').classList.add('edit-mode');
-        window.scrollTo({top: 0, behavior: 'smooth'});
-    }
-
-    function updateData() {
-        const id = parseInt(document.getElementById('editId').value);
-        let db = JSON.parse(localStorage.getItem('earningData'));
-        const idx = db.findIndex(i => i.id === id);
-        db[idx] = { 
-            ...db[idx], 
-            namaOrang: document.getElementById('namaOrang').value, 
-            tgl: document.getElementById('tgl').value, 
-            cegel: parseRaw(document.getElementById('cegel').value), 
-            rate: parseRaw(document.getElementById('rate').value), 
-            guardian: parseRaw(document.getElementById('guardian').value), 
-            makan: parseRaw(document.getElementById('makan').value), 
-            kasbon: parseRaw(document.getElementById('kasbon').value), 
-            isPotong: document.getElementById('potongKasbon').checked 
-        };
-        localStorage.setItem('earningData', JSON.stringify(db));
-        batalEdit(); muatData();
-    }
-
-    function batalEdit() { BersihkanForm(); document.getElementById('btnAdd').style.display = 'inline-block'; document.getElementById('btnUpdate').style.display = 'none'; document.getElementById('btnCancel').style.display = 'none'; document.getElementById('formInput').classList.remove('edit-mode'); }
-
-    function BersihkanForm() {
-        ["namaOrang", "cegel", "rate", "guardian", "kasbon", "editId"].forEach(id => { document.getElementById(id).value = ''; });
-        document.getElementById('tgl').value = new Date().toISOString().split('T')[0];
-        document.getElementById('makan').value = '10.000'; // DEFAULT NILAI MAKAN
-        document.getElementById('potongKasbon').checked = false;
-    }
-
-    function eksporData() {
-        const s = new Date();
-        const tgl = s.toISOString().split('T')[0];
-        const jam = s.getHours().toString().padStart(2, '0');
-        const min = s.getMinutes().toString().padStart(2, '0');
-        const det = s.getSeconds().toString().padStart(2, '0');
-        const data = localStorage.getItem('earningData');
-        if (!data || data === "[]") return alert("Tidak ada data!");
-        const blob = new Blob([data], {type: 'application/json'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `Backup_Farmhouse_${tgl}_${jam}-${min}-${det}.json`;
-        a.click();
-        URL.revokeObjectURL(a.href);
-    }
-
-    function imporData(i) {
-        const r = new FileReader();
-        r.onload = e => { localStorage.setItem('earningData', e.target.result); muatData(); alert("Restore Berhasil!"); };
-        r.readAsText(i.files[0]);
-    }
-
-    function resetSemuaData() { if(confirm("Hapus semua?") && prompt("PIN") === APP_PIN) { localStorage.removeItem('earningData'); muatData(); } }
-    function hapusData(id) { if(confirm("Hapus?")) { const db = JSON.parse(localStorage.getItem('earningData')).filter(i => i.id !== id); localStorage.setItem('earningData', JSON.stringify(db)); muatData(); } }
-    function resetFilter() { document.getElementById('fMulai').value = ''; document.getElementById('fSelesai').value = ''; document.getElementById('searchInput').value = ''; muatData(); }
-
-    document.addEventListener('DOMContentLoaded', () => { 
-        if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
-        updateDropdownPekerja(); BersihkanForm(); muatData(); 
-    });
+    document.addEventListener('DOMContentLoaded', () => { BersihkanForm(); });
 </script>
 </body>
 </html>
