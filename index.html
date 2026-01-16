@@ -15,34 +15,37 @@
         
         /* Header */
         .header-app { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .sync-info { font-size: 0.9em; margin-top: 5px; font-weight: bold; }
+        .sync-info { font-size: 0.85em; margin-top: 5px; color: white !important; background: #2c3e50; padding: 5px 12px; border-radius: 20px; display: inline-block; font-weight: bold; }
 
         /* Dashboard */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .stat-card { padding: 20px; border-radius: 12px; color: white; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .stat-card { padding: 20px; border-radius: 12px; color: white; font-weight: bold; }
         
-        /* Input Section */
+        /* Form & Search Section */
         .input-section { background: var(--card); padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; border-top: 6px solid var(--primary); }
+        .search-bar { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .search-bar input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); }
+
         .input-group { display: flex; flex-direction: column; }
         .input-group label { font-size: 0.8em; font-weight: bold; margin-bottom: 5px; color: var(--primary); }
         input, select { padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); outline: none; }
         
         /* Table Structure */
-        .table-container { overflow-x: auto; background: var(--card); border-radius: 12px; box-shadow: 0 4px 25px rgba(0,0,0,0.1); }
+        .table-container { overflow-x: auto; background: var(--card); border-radius: 12px; }
         table { width: 100%; border-collapse: collapse; min-width: 1350px; font-size: 0.95em; }
         th, td { border: 1px solid var(--border); padding: 10px 8px; text-align: center; }
         
         tbody tr:nth-child(even) { background-color: var(--zebra); }
         th { background: #f2f2f2; color: #333; font-weight: bold; font-size: 0.75em; text-transform: uppercase; }
         
-        /* WARNA HEADER KHUSUS */
+        /* ATURAN WARNA HEADER SESUAI PERMINTAAN */
         .bg-earning { background: #27ae60 !important; color: white !important; }
         .bg-header-dark { background: #34495e !important; color: white !important; }
         .bg-guard { background: #ffff00 !important; color: #000 !important; } /* Kuning Tulisan Hitam */
         .bg-kasbon-head { background: #ff0000 !important; color: #000 !important; } /* Merah Tulisan Hitam */
         .row-total { background: #2c3e50 !important; color: white !important; font-weight: bold; }
         
-        /* WARNA TULISAN BARIS */
+        /* ATURAN WARNA TULISAN BARIS */
         .txt-transfer { color: #e67e22 !important; font-weight: bold; } 
         .txt-tomy { color: #3498db !important; font-weight: bold; }     
         .txt-kasbon { color: #e74c3c !important; font-weight: bold; }    
@@ -67,7 +70,7 @@
     <div class="header-app">
         <div>
             <h2 style="margin:0; color:var(--primary)">Farmhouse Bogor Official</h2>
-            <div id="syncStatus" class="sync-info" style="color:#e67e22">Status: Menghubungkan ke Cloud...</div>
+            <div id="syncStatus" class="sync-info">📍 Menghubungkan...</div>
         </div>
         <div style="display:flex; gap:10px">
             <button style="background:#2c3e50; color:white" onclick="toggleDarkMode()">🌙 Mode</button>
@@ -102,6 +105,12 @@
         <button style="background:#27ae60; color:white; height:48px; margin-top:20px" onclick="simpanData()">SIMPAN DATA</button>
     </div>
 
+    <div class="search-bar">
+        <input type="text" id="cariNama" placeholder="🔍 Cari Nama Pekerja..." onkeyup="muatTabel()">
+        <input type="date" id="fTglAwal" onchange="muatTabel()">
+        <input type="date" id="fTglAkhir" onchange="muatTabel()">
+    </div>
+
     <div class="table-container">
         <table>
             <thead>
@@ -131,6 +140,7 @@
 </div>
 
 <script>
+    // Konfigurasi Firebase Anda
     const firebaseConfig = {
         apiKey: "AIzaSyBphHlavM7eC56wLJ1CUcSi4-yc5YwLcl0",
         authDomain: "farmhouse-dd33a.firebaseapp.com",
@@ -147,18 +157,17 @@
 
     function checkPin() { if(document.getElementById('pinInput').value === "1234") document.getElementById('loginOverlay').style.display='none'; }
 
-    // REALTIME MONITORING
     db.ref('/').on('value', (snapshot) => {
         const data = snapshot.val();
         allData = [];
         const statusEl = document.getElementById('syncStatus');
 
         if (!data) {
-            statusEl.innerText = "Status: Database Kosong / Baru ⚠️";
+            statusEl.innerHTML = "📍 Cluster Green Savana - Bogor ⚠️ (Database Kosong)";
             return;
         }
 
-        // Sync Nama
+        // Sync Nama Pekerja
         const pekData = data.daftarPekerja || {};
         const pekArr = Array.isArray(pekData) ? pekData : Object.values(pekData);
         const sel = document.getElementById('namaOrang');
@@ -167,24 +176,34 @@
         pekArr.sort().forEach(p => { if(p) sel.innerHTML += `<option value="${p}">${p}</option>`; });
         sel.value = cur;
 
-        // Sync Data Transaksi
+        // Sync Transaksi
         const target = data.earningData || data;
         Object.keys(target).forEach(key => {
             const item = target[key];
             if (item && item.namaOrang) allData.push({ id: key, ...item });
         });
 
-        statusEl.innerText = "Status: Terhubung Cloud ✅ (" + allData.length + " Data)";
-        statusEl.style.color = "#27ae60";
+        // Update Status Alamat sesuai permintaan
+        statusEl.innerHTML = "📍 Cluster Green Savana - Bogor ✅ (" + allData.length + " Data)";
         muatTabel();
     });
 
     function muatTabel() {
         const body = document.getElementById('tableBody');
+        const cari = document.getElementById('cariNama').value.toLowerCase();
+        const tAwal = document.getElementById('fTglAwal').value;
+        const tAkhir = document.getElementById('fTglAkhir').value;
         body.innerHTML = '';
+        
         let TC=0, TK=0, TT=0, TY=0, TG=0, TKB=0, TM=0;
 
-        allData.sort((a,b) => new Date(b.tgl) - new Date(a.tgl)).forEach(i => {
+        let filtered = allData.filter(i => {
+            const mNama = !cari || i.namaOrang.toLowerCase().includes(cari);
+            const mTgl = (!tAwal || i.tgl >= tAwal) && (!tAkhir || i.tgl <= tAkhir);
+            return mNama && mTgl;
+        }).sort((a,b) => new Date(b.tgl) - new Date(a.tgl));
+
+        filtered.forEach(i => {
             let kotor = ((i.cegel||0)/1000000) * (i.rate||0);
             let bagiDua = (kotor - (i.guardian||0)) / 2;
             let nMakan = i.makan || 0;
