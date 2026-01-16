@@ -9,47 +9,30 @@
     <style>
         :root { --primary: #27ae60; --bg: #f8f9fa; --card: #ffffff; --text: #333; --border: #ddd; --zebra: #f2f2f2; }
         body.dark-mode { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --border: #333; --zebra: #252525; }
-        
         body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 20px; background: var(--bg); color: var(--text); transition: 0.3s; }
         .container { max-width: 1550px; margin: auto; }
-        
-        /* Header */
         .header-app { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .sync-info { font-size: 0.85em; margin-top: 5px; color: white !important; background: #2c3e50; padding: 5px 12px; border-radius: 20px; display: inline-block; font-weight: bold; }
-
-        /* Dashboard */
+        .sync-info { font-size: 0.85em; margin-top: 5px; color: white; background: #2c3e50; padding: 5px 12px; border-radius: 20px; display: inline-block; font-weight: bold; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .stat-card { padding: 20px; border-radius: 12px; color: white; font-weight: bold; }
-        
-        /* Input & Search */
         .input-section { background: var(--card); padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; border-top: 6px solid var(--primary); }
-        .search-bar { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .search-bar { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
         .search-bar input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); }
-
         .input-group { display: flex; flex-direction: column; }
         .input-group label { font-size: 0.8em; font-weight: bold; margin-bottom: 5px; color: var(--primary); }
         input, select { padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); outline: none; }
-        
-        /* Table */
         .table-container { overflow-x: auto; background: var(--card); border-radius: 12px; }
         table { width: 100%; border-collapse: collapse; min-width: 1350px; font-size: 0.95em; }
         th, td { border: 1px solid var(--border); padding: 10px 8px; text-align: center; }
-        
         tbody tr:nth-child(even) { background-color: var(--zebra); }
         th { background: #f2f2f2; color: #333; font-weight: bold; font-size: 0.75em; text-transform: uppercase; }
-        
         .bg-earning { background: #27ae60 !important; color: white !important; }
         .bg-header-dark { background: #34495e !important; color: white !important; }
-        .bg-guard { background: #ffff00 !important; color: #000 !important; } 
-        .bg-kasbon-head { background: #ff0000 !important; color: #000 !important; } 
         .row-total { background: #2c3e50 !important; color: white !important; font-weight: bold; }
-        
         .txt-transfer { color: #e67e22 !important; font-weight: bold; } 
         .txt-tomy { color: #3498db !important; font-weight: bold; }     
         .txt-kasbon { color: #e74c3c !important; font-weight: bold; }    
         .txt-makan { color: #27ae60 !important; font-weight: bold; } 
-        .txt-bold { font-weight: bold; }
-
         button { cursor: pointer; border-radius: 8px; font-weight: bold; border: none; padding: 10px 15px; transition: 0.2s; }
         #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display:flex; justify-content:center; align-items:center; z-index:9999; }
     </style>
@@ -59,7 +42,7 @@
 <div id="loginOverlay">
     <div style="background: white; padding: 40px; border-radius: 20px; text-align: center; width: 320px;">
         <h2 style="color:#333; margin:0 0 20px 0;">🔐 FARMHOUSE LOGIN</h2>
-        <input type="password" id="pinInput" placeholder="PIN" style="text-align:center; width:100%; margin-bottom:20px; font-size:2em; border: 2px solid #ddd; border-radius: 10px;">
+        <input type="password" id="pinInput" style="text-align:center; width:100%; margin-bottom:20px; font-size:2em; border: 2px solid #ddd;">
         <button style="background:#27ae60; color:white; width:100%; padding:15px;" onclick="checkPin()">MASUK</button>
     </div>
 </div>
@@ -104,10 +87,10 @@
     </div>
 
     <div class="search-bar">
-        <input type="text" id="cariNama" placeholder="🔍 Cari Nama Pekerja..." oninput="muatTabel()">
+        <input type="text" id="cariNama" placeholder="🔍 Cari Nama..." oninput="muatTabel()">
         <input type="date" id="fTglAwal" onchange="muatTabel()">
         <input type="date" id="fTglAkhir" onchange="muatTabel()">
-        <button onclick="resetFilter()" style="background:#e67e22; color:white;">RESET FILTER</button>
+        <button onclick="resetFilter()" style="background:#e67e22; color:white;">RESET SEMUA</button>
     </div>
 
     <div class="table-container">
@@ -116,18 +99,18 @@
                 <tr>
                     <th rowspan="2">NAMA PEKERJA</th>
                     <th rowspan="2">TANGGAL</th>
-                    <th colspan="4" class="bg-earning">PERFORMA EARNING</th>
-                    <th colspan="2" class="bg-header-dark">BAGI HASIL (50/50)</th>
-                    <th rowspan="2" class="bg-guard">GUARD DE+DD</th>
+                    <th colspan="4" class="bg-earning">PERFORMA</th>
+                    <th colspan="2" class="bg-header-dark">BAGI HASIL</th>
+                    <th rowspan="2" style="background:#ffff00; color:#000">GUARD</th>
                     <th rowspan="2">MAKAN</th>
-                    <th rowspan="2" class="bg-kasbon-head">KASBON</th>
+                    <th rowspan="2" style="background:#ff0000; color:#000">KASBON</th>
                     <th rowspan="2">AKSI</th>
                 </tr>
                 <tr>
                     <th class="bg-earning">CEGEL</th>
                     <th class="bg-earning">JUTA(M)</th>
                     <th class="bg-earning">RATE</th>
-                    <th class="bg-earning">TOTAL RP</th>
+                    <th class="bg-earning">TOTAL</th>
                     <th style="background:#d35400; color:white">TRANSFER</th>
                     <th style="background:#2980b9; color:white">TOMY</th>
                 </tr>
@@ -151,7 +134,7 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    let currentData = {};
+    let localDB = {};
 
     window.onload = function() {
         if(localStorage.getItem("isLoggedIn") === "true") document.getElementById('loginOverlay').style.display = 'none';
@@ -167,20 +150,23 @@
 
     function logout() { localStorage.removeItem("isLoggedIn"); location.reload(); }
 
-    // AMBIL DATA DENGAN STRUKTUR BERSIH
+    // REALTIME MONITORING
     db.ref('/').on('value', (snap) => {
-        currentData = snap.val() || {};
-        updatePek(currentData.daftarPekerja);
-        muatTabel();
-    });
-
-    function updatePek(d) {
+        localDB = snap.val() || {};
+        
+        // Render Dropdown Pekerja
         const sel = document.getElementById('namaOrang');
         const cur = sel.value;
         sel.innerHTML = '<option value="">-- Pilih Nama --</option>';
-        if(d) Object.values(d).sort().forEach(p => { sel.innerHTML += `<option value="${p}">${p}</option>`; });
+        if(localDB.daftarPekerja) {
+            Object.values(localDB.daftarPekerja).sort().forEach(p => {
+                sel.innerHTML += `<option value="${p}">${p}</option>`;
+            });
+        }
         sel.value = cur;
-    }
+
+        muatTabel();
+    });
 
     function muatTabel() {
         const body = document.getElementById('tableBody');
@@ -188,18 +174,22 @@
         const tAwal = document.getElementById('fTglAwal').value;
         const tAkhir = document.getElementById('fTglAkhir').value;
         
-        let rawList = [];
-        // Deteksi apakah earningData ada atau flat di root
-        const source = currentData.earningData || currentData;
+        let list = [];
+        // GABUNGKAN DATA: Ambil dari earningData ATAU dari root jika format lama
+        const source = localDB.earningData || {};
         
-        Object.keys(source).forEach(k => {
-            const item = source[k];
-            if(item && item.namaOrang) {
-                rawList.push({ id: k, isOld: !currentData.earningData, ...item });
+        // Cek juga di root (jika ada data nyasar di luar earningData)
+        Object.keys(localDB).forEach(key => {
+            if(key !== 'earningData' && key !== 'daftarPekerja' && localDB[key].namaOrang) {
+                list.push({ id: key, isRoot: true, ...localDB[key] });
             }
         });
+        // Tambahkan dari earningData
+        Object.keys(source).forEach(key => {
+            list.push({ id: key, isRoot: false, ...source[key] });
+        });
 
-        let filtered = rawList.filter(i => {
+        let filtered = list.filter(i => {
             const mN = !cari || i.namaOrang.toLowerCase().includes(cari);
             const mT = (!tAwal || i.tgl >= tAwal) && (!tAkhir || i.tgl <= tAkhir);
             return mN && mT;
@@ -218,8 +208,7 @@
             TC += (i.cegel||0); TK += kotor; TT += hTrans; TY += hTomy; TG += (i.guardian||0); TKB += (i.kasbon||0); TM += nMakan;
 
             body.innerHTML += `<tr>
-                <td style="text-align:left" class="txt-bold">${i.namaOrang}</td>
-                <td>${i.tgl}</td>
+                <td>${i.namaOrang}</td><td>${i.tgl}</td>
                 <td>${(i.cegel||0).toLocaleString()}</td>
                 <td>${((i.cegel||0)/1000000).toFixed(1)}M</td>
                 <td>${(i.rate||0).toLocaleString()}</td>
@@ -229,19 +218,18 @@
                 <td>${(i.guardian||0).toLocaleString()}</td>
                 <td class="txt-makan">${nMakan.toLocaleString()}</td>
                 <td class="txt-kasbon">${(i.kasbon||0).toLocaleString()}</td>
-                <td><button onclick="hapusData('${i.id}', ${i.isOld})" style="background:rgba(200,200,200,0.2); padding:5px 10px;">✕</button></td>
+                <td><button onclick="hapusData('${i.id}', ${i.isRoot})" style="background:#eee; color:#333;">✕</button></td>
             </tr>`;
         });
         
         document.getElementById('footerTotal').innerHTML = `<td colspan="2">TOTAL</td><td>${TC.toLocaleString()}</td><td>${(TC/1000000).toFixed(1)}M</td><td>-</td><td>${Math.round(TK).toLocaleString()}</td><td>${Math.round(TT).toLocaleString()}</td><td>${Math.round(TY).toLocaleString()}</td><td>${TG.toLocaleString()}</td><td>${TM.toLocaleString()}</td><td>${TKB.toLocaleString()}</td><td></td>`;
         updateDash(TK, TT, TKB);
-        document.getElementById('syncStatus').innerHTML = "📍 Green Savana ✅ (" + rawList.length + " Data)";
+        document.getElementById('syncStatus').innerHTML = `📍 Sync: ${list.length} Data`;
     }
 
     function simpanData() {
         const n = document.getElementById('namaOrang').value;
         if(!n) return alert("Pilih Nama!");
-        
         const obj = {
             namaOrang: n, tgl: document.getElementById('tgl').value,
             cegel: parseRaw(document.getElementById('cegel').value),
@@ -251,12 +239,43 @@
             kasbon: parseRaw(document.getElementById('kasbon').value),
             isPotong: document.getElementById('potongKasbon').checked
         };
+        db.ref('earningData').push(obj).then(() => { bersih(); resetFilter(); });
+    }
 
-        // PAKSA SIMPAN KE FOLDER earningData
-        db.ref('earningData').push(obj).then(() => {
-            bersih();
-            resetFilter();
-        });
+    // FUNGSI RESTORE TERBARU DENGAN AUTO-CONVERTER
+    function importData(inp) {
+        const file = inp.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                let data = JSON.parse(e.target.result);
+                let fixedData = { daftarPekerja: data.daftarPekerja || {}, earningData: {} };
+
+                // LOGIKA AUTO-CONVERTER:
+                // Jika data berbentuk format lama (langsung list di root), masukkan ke earningData
+                Object.keys(data).forEach(key => {
+                    if(key !== 'daftarPekerja' && key !== 'earningData') {
+                        if(data[key].namaOrang) {
+                            fixedData.earningData[key] = data[key];
+                        }
+                    }
+                });
+
+                // Jika sudah ada earningData di file backup, gabungkan
+                if(data.earningData) {
+                    fixedData.earningData = {...fixedData.earningData, ...data.earningData};
+                }
+
+                if(confirm("Restore data sekarang? Seluruh data cloud akan diganti.")) {
+                    db.ref('/').set(fixedData).then(() => {
+                        alert("Berhasil! Data telah dikonversi ke format baru.");
+                        location.reload();
+                    });
+                }
+            } catch(err) { alert("File rusak!"); }
+        };
+        reader.readAsText(file);
     }
 
     function resetFilter() {
@@ -266,35 +285,11 @@
         muatTabel();
     }
 
-    function hapusData(id, isOld) {
+    function hapusData(id, isRoot) {
         if(confirm("Hapus?")) {
-            const path = isOld ? id : 'earningData/' + id;
+            const path = isRoot ? id : 'earningData/' + id;
             db.ref(path).remove();
         }
-    }
-
-    // PERBAIKAN FUNGSI IMPORT (RESTORE)
-    function importData(inp) {
-        const file = inp.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const dataJson = JSON.parse(e.target.result);
-                // Validasi: Jika data yang diimport tidak punya struktur folder, bungkus kembali
-                if(!dataJson.earningData && !dataJson.daftarPekerja) {
-                    alert("Format backup salah atau usang.");
-                    return;
-                }
-                db.ref('/').set(dataJson).then(() => {
-                    alert("Data Berhasil di Restore!");
-                    location.reload(); // Refresh total agar sinkron
-                });
-            } catch(err) {
-                alert("File bukan JSON yang valid!");
-            }
-        };
-        reader.readAsText(file);
     }
 
     function parseRaw(s) { return parseFloat(s.toString().replace(/\./g, '').replace(',', '.')) || 0; }
@@ -316,6 +311,7 @@
     }
     function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
     function tambahPekerja() { const n = prompt("Nama:"); if(n) db.ref('daftarPekerja').push(n); }
+    function hapusPekerja() { const n = document.getElementById('namaOrang').value; if(n && confirm("Hapus?")) { db.ref('daftarPekerja').once('value').then(s => { s.forEach(c => { if(c.val() === n) c.ref.remove(); }); }); } }
     function exportData() { db.ref('/').once('value').then(snap => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(snap.val(),null,2)],{type:'application/json'})); a.download='Backup_Farmhouse.json'; a.click(); }); }
 </script>
 </body>
