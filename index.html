@@ -13,25 +13,28 @@
         body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 20px; background: var(--bg); color: var(--text); transition: 0.3s; }
         .container { max-width: 1550px; margin: auto; }
         
-        /* Header & Dashboard */
+        /* Header */
         .header-app { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .sync-info { font-size: 0.85em; color: #7f8c8d; }
+        #syncStatus { font-weight: bold; }
+
+        /* Dashboard */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .stat-card { padding: 20px; border-radius: 12px; color: white; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
-        /* Form Section */
+        /* Input Section */
         .input-section { background: var(--card); padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; border-top: 6px solid var(--primary); }
         .input-group { display: flex; flex-direction: column; }
         .input-group label { font-size: 0.8em; font-weight: bold; margin-bottom: 5px; color: var(--primary); }
         input, select { padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); outline: none; }
         
-        /* TABLE ZEBRA & STRUCTURE */
+        /* Table Zebra & Structure */
         .table-container { overflow-x: auto; background: var(--card); border-radius: 12px; box-shadow: 0 4px 25px rgba(0,0,0,0.1); }
         table { width: 100%; border-collapse: collapse; min-width: 1350px; font-size: 0.95em; }
         th, td { border: 1px solid var(--border); padding: 10px 8px; text-align: center; }
         
-        /* Zebra Grid Logic */
         tbody tr:nth-child(even) { background-color: var(--zebra); }
-        tbody tr:hover { background-color: rgba(39, 174, 96, 0.1); } /* Highlight saat kursor lewat */
+        tbody tr:hover { background-color: rgba(39, 174, 96, 0.1); }
 
         th { background: #f2f2f2; color: #333; font-weight: bold; font-size: 0.75em; text-transform: uppercase; }
         .dark-mode th { background: #2c2c2c; color: #bbb; }
@@ -47,23 +50,25 @@
         .txt-bold { font-weight: bold; }
 
         button { cursor: pointer; border-radius: 8px; font-weight: bold; border: none; padding: 10px 15px; transition: 0.2s; }
-        button:active { transform: scale(0.95); }
         #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display:flex; justify-content:center; align-items:center; z-index:9999; }
     </style>
 </head>
 <body class="dark-mode">
 
 <div id="loginOverlay">
-    <div style="background: white; padding: 40px; border-radius: 20px; text-align: center; width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-        <h2 style="color:#333; margin:0 0 20px 0;">🔐 FARMHOUSE BOGOR</h2>
-        <input type="password" id="pinInput" style="text-align:center; width:100%; margin-bottom:20px; font-size:2em; border: 2px solid #ddd; border-radius: 10px; padding: 5px;">
-        <button style="background:#27ae60; color:white; width:100%; padding:15px; font-size:1.1em;" onclick="checkPin()">MASUK SISTEM</button>
+    <div style="background: white; padding: 40px; border-radius: 20px; text-align: center; width: 320px;">
+        <h2 style="color:#333; margin:0 0 20px 0;">🔐 FARMHOUSE LOGIN</h2>
+        <input type="password" id="pinInput" style="text-align:center; width:100%; margin-bottom:20px; font-size:2em; border: 2px solid #ddd; border-radius: 10px;">
+        <button style="background:#27ae60; color:white; width:100%; padding:15px;" onclick="checkPin()">MASUK</button>
     </div>
 </div>
 
 <div class="container">
     <div class="header-app">
-        <h2 style="margin:0; color:var(--primary)">Farmhouse Bogor <span style="font-weight: normal; color:var(--text); font-size: 0.7em;">Official Cloud</span></h2>
+        <div>
+            <h2 style="margin:0; color:var(--primary)">Farmhouse Bogor Official</h2>
+            <div class="sync-info">Server Status: <span id="syncStatus" style="color:#e67e22">Menghubungkan...</span></div>
+        </div>
         <div style="display:flex; gap:10px">
             <button style="background:#2c3e50; color:white" onclick="toggleDarkMode()">🌙 Mode</button>
             <button style="background:#3498db; color:white" onclick="exportData()">💾 Backup</button>
@@ -94,7 +99,7 @@
             <input type="text" id="kasbon" onkeyup="formatInput(this)">
             <label style="font-size:0.7em; margin-top:5px; color:#e74c3c"><input type="checkbox" id="potongKasbon"> Potong Transfer?</label>
         </div>
-        <button style="background:#27ae60; color:white; height:48px; margin-top:20px; font-size:1em;" onclick="simpanData()">SIMPAN DATA</button>
+        <button style="background:#27ae60; color:white; height:48px; margin-top:20px" onclick="simpanData()">SIMPAN DATA</button>
     </div>
 
     <div class="table-container">
@@ -142,12 +147,16 @@
 
     function checkPin() { if(document.getElementById('pinInput').value === "1234") document.getElementById('loginOverlay').style.display='none'; }
 
+    // REALTIME MONITORING
     db.ref('/').on('value', (snapshot) => {
         const data = snapshot.val();
         allData = [];
-        if (!data) return;
+        if (!data) {
+            document.getElementById('syncStatus').innerText = "Database Kosong ⚠️";
+            return;
+        }
 
-        // Sync Nama
+        // Sync Nama Pekerja
         const pekData = data.daftarPekerja || {};
         const pekArr = Array.isArray(pekData) ? pekData : Object.values(pekData);
         const sel = document.getElementById('namaOrang');
@@ -162,6 +171,12 @@
             const item = target[key];
             if (item && item.namaOrang) allData.push({ id: key, ...item });
         });
+
+        // UPDATE STATUS KONEKSI
+        const statusEl = document.getElementById('syncStatus');
+        statusEl.innerText = "Terhubung ✅ (" + allData.length + " Data)";
+        statusEl.style.color = "#27ae60";
+
         muatTabel();
     });
 
@@ -195,7 +210,7 @@
             </tr>`;
         });
         
-        document.getElementById('footerTotal').innerHTML = `<td colspan="2">TOTAL</td><td>${TC.toLocaleString()}</td><td>${(TC/1000000).toFixed(1)}M</td><td>-</td><td>${Math.round(TK).toLocaleString()}</td><td>${Math.round(TT).toLocaleString()}</td><td>${Math.round(TY).toLocaleString()}</td><td>${TG.toLocaleString()}</td><td>${TM.toLocaleString()}</td><td>${TKB.toLocaleString()}</td><td></td>`;
+        document.getElementById('footerTotal').innerHTML = `<td colspan="2">TOTAL KESELURUHAN</td><td>${TC.toLocaleString()}</td><td>${(TC/1000000).toFixed(1)}M</td><td>-</td><td>${Math.round(TK).toLocaleString()}</td><td>${Math.round(TT).toLocaleString()}</td><td>${Math.round(TY).toLocaleString()}</td><td>${TG.toLocaleString()}</td><td>${TM.toLocaleString()}</td><td>${TKB.toLocaleString()}</td><td></td>`;
         updateDash(TK, TT, TKB);
     }
 
@@ -223,16 +238,16 @@
     }
     function updateDash(k, t, kb) { 
         document.getElementById('summaryStats').innerHTML = `
-        <div class="stat-card" style="background:#27ae60"><div>KOTOR</div><div style="font-size:1.6em">Rp ${Math.round(k).toLocaleString()}</div></div>
-        <div class="stat-card" style="background:#e67e22"><div>TRANSFER</div><div style="font-size:1.6em">Rp ${Math.round(t).toLocaleString()}</div></div>
-        <div class="stat-card" style="background:#c0392b"><div>KASBON</div><div style="font-size:1.6em">Rp ${Math.round(kb).toLocaleString()}</div></div>`;
+        <div class="stat-card" style="background:#27ae60"><div>TOTAL KOTOR</div><div style="font-size:1.6em">Rp ${Math.round(k).toLocaleString()}</div></div>
+        <div class="stat-card" style="background:#e67e22"><div>TOTAL TRANSFER</div><div style="font-size:1.6em">Rp ${Math.round(t).toLocaleString()}</div></div>
+        <div class="stat-card" style="background:#c0392b"><div>TOTAL KASBON</div><div style="font-size:1.6em">Rp ${Math.round(kb).toLocaleString()}</div></div>`;
     }
     function bersih() { ["cegel","rate","guardian","kasbon"].forEach(id=>document.getElementById(id).value=''); document.getElementById('tgl').value = new Date().toISOString().split('T')[0]; document.getElementById('makan').value="10.000"; }
     function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
-    function tambahPekerja() { const n = prompt("Nama:"); if(n) db.ref('daftarPekerja').push(n); }
+    function tambahPekerja() { const n = prompt("Masukkan Nama Pekerja:"); if(n) db.ref('daftarPekerja').push(n); }
     function hapusPekerja() { const n = document.getElementById('namaOrang').value; if(n && confirm("Hapus nama ini?")) { db.ref('daftarPekerja').once('value').then(s => { s.forEach(c => { if(c.val() === n) c.ref.remove(); }); }); } }
-    function exportData() { db.ref('/').once('value').then(snap => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(snap.val(),null,2)],{type:'application/json'})); a.download='Backup.json'; a.click(); }); }
-    function importData(inp) { const file = inp.files[0]; if(!file) return; const r = new FileReader(); r.onload=(e)=>{ db.ref('/').set(JSON.parse(e.target.result)).then(()=>alert("Berhasil!")); }; r.readAsText(file); }
+    function exportData() { db.ref('/').once('value').then(snap => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(snap.val(),null,2)],{type:'application/json'})); a.download='Backup_Farmhouse.json'; a.click(); }); }
+    function importData(inp) { const file = inp.files[0]; if(!file) return; const r = new FileReader(); r.onload=(e)=>{ db.ref('/').set(JSON.parse(e.target.result)).then(()=>alert("Berhasil Restore Data!")); }; r.readAsText(file); }
     document.getElementById('tgl').value = new Date().toISOString().split('T')[0];
 </script>
 </body>
