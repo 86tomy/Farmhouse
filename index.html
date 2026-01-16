@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmhouse Manager Pro - Edition 2026</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* --- CSS DASAR --- */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background: #f0f2f5; color: #333; transition: 0.3s; }
+        .container { max-width: 1400px; margin: auto; }
+        
+        .header-app { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 20px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { padding: 20px; border-radius: 12px; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        
+        .chart-controls { margin-bottom: 10px; display: flex; gap: 10px; align-items: center; }
+        .btn-chart { background: #8e44ad; color: white; padding: 12px 20px; font-size: 1em; border-radius: 8px; cursor: pointer; border: none; font-weight: bold; }
+
+        .input-section { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; border-top: 5px solid #27ae60; }
+        .input-section.edit-mode { border-top: 5px solid #f39c12; background: #fffdf5; }
+        
+        .filter-section { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+        .input-group { display: flex; flex-direction: column; flex: 1; min-width: 180px; }
+        .input-group label { font-size: 0.85em; font-weight: 600; margin-bottom: 5px; color: #555; }
+        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1em; outline: none; background: white; }
+
+        .chart-container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; height: 350px; display: none; }
+
+        .table-container { overflow-x: auto; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; min-width: 1200px; }
+        th, td { border: 1px solid #eee; padding: 12px; text-align: center; }
+        th { background: #f8f9fa; font-weight: 600; font-size: 0.9em; }
+        
+        .bg-earning { background-color: #27ae60 !important; color: white; }
+        .bg-kasbon { background-color: #e74c3c !important; color: white; }
+        .row-total { background-color: #2c3e50 !important; color: white !important; font-weight: bold; }
+        
+        button { cursor: pointer; border-radius: 8px; font-weight: bold; border: none; padding: 10px 15px; transition: 0.2s; }
+        .btn-add { background: #27ae60; color: white; }
+        .btn-danger { background: #c0392b; color: white; }
+
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .login-box { background: white; padding: 30px; border-radius: 15px; text-align: center; width: 320px; }
+
+        /* --- DARK MODE --- */
+        body.dark-mode { background: #121212; color: #e0e0e0; }
+        .dark-mode .header-app, .dark-mode .input-section, .dark-mode .filter-section, .dark-mode .chart-container, .dark-mode .table-container, .dark-mode .login-box { background: #1e1e1e !important; color: #e0e0e0; }
+        .dark-mode input, .dark-mode select { background: #2d2d2d; border-color: #444; color: white; }
+        .dark-mode th { background: #252525; color: #bbb; border-color: #333; }
+        .dark-mode td { border-color: #333; }
+
+        @media print { .input-section, .filter-section, .action-buttons, .chart-controls, #lockBtn, th:last-child, td:last-child { display: none !important; } }
+    </style>
+</head>
+<body>
+
+<div id="loginOverlay">
+    <div class="login-box">
+        <h2 style="margin-bottom:10px">🔐 Terkunci</h2>
+        <input type="password" id="pinInput" placeholder="PIN" style="text-align:center; width:100%; margin-bottom:15px; font-size:1.5em">
+        <button class="btn-add" style="width:100%; padding:15px" onclick="checkPin()">BUKA AKSES</button>
+    </div>
+</div>
+
+<div class="container">
+    <div class="header-app">
+        <h2>Farmhouse Manager Pro</h2>
+        <div class="action-buttons">
+            <button id="darkModeBtn" style="background:#2c3e50; color:white" onclick="toggleDarkMode()">🌙 Mode</button>
+            <button style="background:#3498db; color:white" onclick="eksporData()">💾 Backup</button>
+            <button style="background:#2ecc71; color:white" onclick="document.getElementById('importFile').click()">📂 Restore</button>
+            <button class="btn-danger" onclick="resetSemuaData()">⚠️ Reset</button>
+            <button id="lockBtn" style="background:#7f8c8d; color:white" onclick="location.reload()">🔒</button>
+            <input type="file" id="importFile" style="display:none" accept=".json" onchange="imporData(this)">
+        </div>
+    </div>
+
+    <div id="summaryStats" class="stats-grid"></div>
+
+    <div class="chart-controls">
+        <button class="btn-chart" onclick="muatGrafik()">📊 Tampilkan / Update Grafik</button>
+        <button id="btnHideChart" style="background:#95a5a6; color:white; display:none;" onclick="toggleChart(false)">Tutup Grafik</button>
+    </div>
+
+    <div id="chartWrapper" class="chart-container">
+        <canvas id="earningChart"></canvas>
+    </div>
+
+    <input type="hidden" id="editId">
+    <div class="input-section" id="formInput">
+        <div class="input-group">
+            <label>Nama Pekerja</label>
+            <div style="display: flex; gap: 5px;">
+                <select id="namaOrang" style="flex: 1;">
+                    <option value="">-- Pilih Nama --</option>
+                </select>
+                <button type="button" onclick="tambahPekerjaBaru()" style="background:#3498db; color:white; padding: 0 12px; border-radius: 8px;">+</button>
+            </div>
+        </div>
+        <div class="input-group"><label>Tanggal</label><input type="date" id="tgl"></div>
+        <div class="input-group"><label>Cegel</label><input type="text" id="cegel" placeholder="Cegel" onkeyup="formatInput(this)"></div>
+        <div class="input-group"><label>Rate</label><input type="text" id="rate" placeholder="Rate" onkeyup="formatInput(this)"></div>
+        <div class="input-group"><label>Guardian</label><input type="text" id="guardian" placeholder="Guardian" onkeyup="formatInput(this)"></div>
+        <div class="input-group"><label>Makan</label><input type="text" id="makan" value="10.000" placeholder="Makan" onkeyup="formatInput(this)"></div>
+        <div class="input-group"><label>Kasbon</label><input type="text" id="kasbon" placeholder="Kasbon" onkeyup="formatInput(this)"></div>
+        <div class="input-group">
+            <label>Opsi</label>
+            <label style="font-size:0.8em; color:#e74c3c; cursor: pointer;"><input type="checkbox" id="potongKasbon"> Potong Transfer?</label>
+        </div>
+        <button class="btn-add" id="btnAdd" onclick="simpanData()">Simpan Data</button>
+        <button style="background:#f39c12; color:white; display:none" id="btnUpdate" onclick="updateData()">Update</button>
+        <button style="background:#95a5a6; color:white; display:none" id="btnCancel" onclick="batalEdit()">Batal</button>
+    </div>
+
+    <div class="filter-section">
+        <div class="input-group"><label>Cari Nama</label><input type="text" id="searchInput" onkeyup="muatData()" placeholder="🔍 Nama..."></div>
+        <div class="input-group"><label>Dari Tanggal</label><input type="date" id="fMulai" onchange="muatData()"></div>
+        <div class="input-group"><label>Sampai</label><input type="date" id="fSelesai" onchange="muatData()"></div>
+        <button onclick="resetFilter()" style="background:#ecf0f1; border:1px solid #ccc; color:#333">Reset Filter</button>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th rowspan="2">Nama</th>
+                    <th rowspan="2">Tanggal</th>
+                    <th colspan="4" class="bg-earning">Earning</th>
+                    <th colspan="2" style="background:#34495e; color:white">Bagi 50/50</th>
+                    <th style="background:#f1c40f; color:#000">Guard</th>
+                    <th style="background:#27ae60; color:#fff">Makan</th>
+                    <th class="bg-kasbon">Kasbon</th>
+                    <th rowspan="2">Aksi</th>
+                </tr>
+                <tr>
+                    <th class="bg-earning">Cegel</th>
+                    <th class="bg-earning">M</th>
+                    <th class="bg-earning">Rate</th>
+                    <th class="bg-earning">Rupiah</th>
+                    <th style="background:#d35400; color:white">Transfer</th>
+                    <th style="background:#2980b9; color:white">Tomy</th>
+                    <th style="background:#f1c40f; color:#000">DE+DD</th>
+                    <th style="background:#27ae60; color:#fff">U. Makan</th>
+                    <th class="bg-kasbon">Harian</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+            <tfoot><tr id="footerTotal" class="row-total"></tr></tfoot>
+        </table>
+    </div>
+</div>
+
+<script>
+    const APP_PIN = "1234"; 
+    let myChart = null;
+    let daftarPekerja = JSON.parse(localStorage.getItem('daftarPekerja')) || ["Pekerja 1"];
+
+    function checkPin() {
+        if(document.getElementById('pinInput').value === APP_PIN) {
+            document.getElementById('loginOverlay').style.display = 'none';
+        } else { alert("PIN Salah!"); }
+    }
+
+    function toggleDarkMode() {
+        const isDark = document.body.classList.toggle('dark-mode');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    }
+
+    function updateDropdownPekerja() {
+        const select = document.getElementById('namaOrang');
+        const val = select.value;
+        select.innerHTML = '<option value="">-- Pilih Nama --</option>';
+        daftarPekerja.sort().forEach(p => {
+            select.innerHTML += `<option value="${p}">${p}</option>`;
+        });
+        if(val) select.value = val;
+    }
+
+    function tambahPekerjaBaru() {
+        const n = prompt("Nama Pekerja Baru:");
+        if (n && n.trim() !== "") {
+            if (!daftarPekerja.includes(n.trim())) {
+                daftarPekerja.push(n.trim());
+                localStorage.setItem('daftarPekerja', JSON.stringify(daftarPekerja));
+                updateDropdownPekerja();
+                document.getElementById('namaOrang').value = n.trim();
+            }
+        }
+    }
+
+    function toggleChart(s) {
+        document.getElementById('chartWrapper').style.display = s ? 'block' : 'none';
+        document.getElementById('btnHideChart').style.display = s ? 'inline-block' : 'none';
+    }
+
+    function muatGrafik() {
+        let db = JSON.parse(localStorage.getItem('earningData')) || [];
+        if (db.length === 0) return alert("Belum ada data.");
+        toggleChart(true);
+        const ctx = document.getElementById('earningChart').getContext('2d');
+        const groups = {};
+        db.forEach(x => {
+            groups[x.namaOrang] = (groups[x.namaOrang] || 0) + ((x.cegel/1000000) * x.rate);
+        });
+        const isDark = document.body.classList.contains('dark-mode');
+        if(myChart) myChart.destroy();
+        myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(groups),
+                datasets: [{ label: 'Omzet per Orang (Rp)', data: Object.values(groups), backgroundColor: '#8e44ad' }]
+            },
+            options: { 
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    x: { ticks: { color: isDark ? '#bbb' : '#666' } },
+                    y: { ticks: { color: isDark ? '#bbb' : '#666' } }
+                }
+            }
+        });
+    }
+
+    function formatInput(obj) {
+        let v = obj.value.replace(/[^,\d]/g, '').toString();
+        let s = v.split(',');
+        let si = s[0].length % 3;
+        let r = s[0].substr(0, si);
+        let ri = s[0].substr(si).match(/\d{3}/gi);
+        if (ri) { r += (si ? '.' : '') + ri.join('.'); }
+        obj.value = s[1] != undefined ? r + ',' + s[1] : r;
+    }
+
+    function parseRaw(s) { 
+        if(!s) return 0;
+        return parseFloat(s.toString().replace(/\./g, '').replace(',', '.')) || 0; 
+    }
+    
+    function formatRupiahDisplay(n) { return "Rp " + Math.round(n).toLocaleString('id-ID'); }
+
+    function muatData() {
+        const body = document.getElementById('tableBody');
+        const filter = document.getElementById('searchInput').value.toLowerCase();
+        const start = document.getElementById('fMulai').value;
+        const end = document.getElementById('fSelesai').value;
+        body.innerHTML = '';
+        let db = JSON.parse(localStorage.getItem('earningData')) || [];
+        db.sort((a,b) => new Date(b.tgl) - new Date(a.tgl));
+        let T_Cegel=0, T_Kotor=0, T_Transfer=0, T_Tomy=0, T_Guard=0, T_Kasbon=0, T_Makan=0;
+
+        db.forEach(i => {
+            if((!start || i.tgl >= start) && (!end || i.tgl <= end) && i.namaOrang.toLowerCase().includes(filter)) {
+                let rK = (i.cegel/1000000) * i.rate;
+                let bagiDua = (rK - i.guardian) / 2;
+                
+                // LOGIKA MAKAN
+                let nMakan = i.makan || 0;
+                let hTomy = bagiDua - nMakan; // Dikurangi dari Tomy
+                let baseTransfer = bagiDua + nMakan; // Ditambah ke Transfer
+                
+                let hT = i.isPotong ? (baseTransfer - i.kasbon) : baseTransfer;
+
+                T_Cegel += i.cegel; T_Kotor += rK; T_Transfer += hT; T_Tomy += hTomy; T_Guard += i.guardian; T_Kasbon += i.kasbon; T_Makan += nMakan;
+
+                body.innerHTML += `<tr>
+                    <td><b>${i.namaOrang}</b></td>
+                    <td>${i.tgl}</td>
+                    <td>${i.cegel.toLocaleString('id-ID')}</td>
+                    <td>${(i.cegel/1000000).toFixed(1)}M</td>
+                    <td>${formatRupiahDisplay(i.rate)}</td>
+                    <td>${formatRupiahDisplay(rK)}</td>
+                    <td style="font-weight:bold; color:${hT<0?'#e74c3c':''}">${formatRupiahDisplay(hT)}</td>
+                    <td>${formatRupiahDisplay(hTomy)}</td>
+                    <td>${formatRupiahDisplay(i.guardian)}</td>
+                    <td style="color:#27ae60">${formatRupiahDisplay(nMakan)}</td>
+                    <td style="color:#e74c3c">${formatRupiahDisplay(i.kasbon)}</td>
+                    <td>
+                        <button style="background:#f39c12; color:white; padding:4px 8px" onclick="editRecord(${i.id})">✎</button> 
+                        <button style="background:#e74c3c; color:white; padding:4px 8px" onclick="hapusData(${i.id})">✕</button>
+                    </td>
+                </tr>`;
+            }
+        });
+        document.getElementById('footerTotal').innerHTML = `<td colspan="2">TOTAL</td><td>${T_Cegel.toLocaleString('id-ID')}</td><td>${(T_Cegel/1000000).toFixed(1)}M</td><td>-</td><td>${formatRupiahDisplay(T_Kotor)}</td><td>${formatRupiahDisplay(T_Transfer)}</td><td>${formatRupiahDisplay(T_Tomy)}</td><td>${formatRupiahDisplay(T_Guard)}</td><td>${formatRupiahDisplay(T_Makan)}</td><td>${formatRupiahDisplay(T_Kasbon)}</td><td></td>`;
+        updateDashboard(T_Kotor, T_Transfer, T_Kasbon);
+    }
+
+    function updateDashboard(k, t, kb) {
+        document.getElementById('summaryStats').innerHTML = `<div class="stat-card" style="background:#27ae60"><div>Omzet Kotor</div><div style="font-size:1.5em; font-weight:bold">${formatRupiahDisplay(k)}</div></div><div class="stat-card" style="background:#2980b9"><div>Total Transfer</div><div style="font-size:1.5em; font-weight:bold">${formatRupiahDisplay(t)}</div></div><div class="stat-card" style="background:#e67e22"><div>Total Kasbon</div><div style="font-size:1.5em; font-weight:bold">${formatRupiahDisplay(kb)}</div></div>`;
+    }
+
+    function simpanData() {
+        const n = document.getElementById('namaOrang').value;
+        if(!n) return alert("Pilih Nama!");
+        const db = JSON.parse(localStorage.getItem('earningData')) || [];
+        db.push({ 
+            id: Date.now(), 
+            namaOrang: n, 
+            tgl: document.getElementById('tgl').value, 
+            cegel: parseRaw(document.getElementById('cegel').value), 
+            rate: parseRaw(document.getElementById('rate').value), 
+            guardian: parseRaw(document.getElementById('guardian').value), 
+            makan: parseRaw(document.getElementById('makan').value), 
+            kasbon: parseRaw(document.getElementById('kasbon').value), 
+            isPotong: document.getElementById('potongKasbon').checked 
+        });
+        localStorage.setItem('earningData', JSON.stringify(db));
+        BersihkanForm(); muatData();
+    }
+
+    function editRecord(id) {
+        const item = JSON.parse(localStorage.getItem('earningData')).find(i => i.id === id);
+        document.getElementById('editId').value = item.id;
+        document.getElementById('namaOrang').value = item.namaOrang;
+        document.getElementById('tgl').value = item.tgl;
+        document.getElementById('cegel').value = item.cegel.toLocaleString('id-ID');
+        document.getElementById('rate').value = item.rate.toLocaleString('id-ID');
+        document.getElementById('guardian').value = item.guardian.toLocaleString('id-ID');
+        document.getElementById('makan').value = (item.makan || 0).toLocaleString('id-ID');
+        document.getElementById('kasbon').value = item.kasbon.toLocaleString('id-ID');
+        document.getElementById('potongKasbon').checked = item.isPotong;
+        document.getElementById('btnAdd').style.display = 'none';
+        document.getElementById('btnUpdate').style.display = 'inline-block';
+        document.getElementById('btnCancel').style.display = 'inline-block';
+        document.getElementById('formInput').classList.add('edit-mode');
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    function updateData() {
+        const id = parseInt(document.getElementById('editId').value);
+        let db = JSON.parse(localStorage.getItem('earningData'));
+        const idx = db.findIndex(i => i.id === id);
+        db[idx] = { 
+            ...db[idx], 
+            namaOrang: document.getElementById('namaOrang').value, 
+            tgl: document.getElementById('tgl').value, 
+            cegel: parseRaw(document.getElementById('cegel').value), 
+            rate: parseRaw(document.getElementById('rate').value), 
+            guardian: parseRaw(document.getElementById('guardian').value), 
+            makan: parseRaw(document.getElementById('makan').value), 
+            kasbon: parseRaw(document.getElementById('kasbon').value), 
+            isPotong: document.getElementById('potongKasbon').checked 
+        };
+        localStorage.setItem('earningData', JSON.stringify(db));
+        batalEdit(); muatData();
+    }
+
+    function batalEdit() { BersihkanForm(); document.getElementById('btnAdd').style.display = 'inline-block'; document.getElementById('btnUpdate').style.display = 'none'; document.getElementById('btnCancel').style.display = 'none'; document.getElementById('formInput').classList.remove('edit-mode'); }
+
+    function BersihkanForm() {
+        ["namaOrang", "cegel", "rate", "guardian", "kasbon", "editId"].forEach(id => { document.getElementById(id).value = ''; });
+        document.getElementById('tgl').value = new Date().toISOString().split('T')[0];
+        document.getElementById('makan').value = '10.000'; // DEFAULT NILAI MAKAN
+        document.getElementById('potongKasbon').checked = false;
+    }
+
+    function eksporData() {
+        const s = new Date();
+        const tgl = s.toISOString().split('T')[0];
+        const jam = s.getHours().toString().padStart(2, '0');
+        const min = s.getMinutes().toString().padStart(2, '0');
+        const det = s.getSeconds().toString().padStart(2, '0');
+        const data = localStorage.getItem('earningData');
+        if (!data || data === "[]") return alert("Tidak ada data!");
+        const blob = new Blob([data], {type: 'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Backup_Farmhouse_${tgl}_${jam}-${min}-${det}.json`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+    }
+
+    function imporData(i) {
+        const r = new FileReader();
+        r.onload = e => { localStorage.setItem('earningData', e.target.result); muatData(); alert("Restore Berhasil!"); };
+        r.readAsText(i.files[0]);
+    }
+
+    function resetSemuaData() { if(confirm("Hapus semua?") && prompt("PIN") === APP_PIN) { localStorage.removeItem('earningData'); muatData(); } }
+    function hapusData(id) { if(confirm("Hapus?")) { const db = JSON.parse(localStorage.getItem('earningData')).filter(i => i.id !== id); localStorage.setItem('earningData', JSON.stringify(db)); muatData(); } }
+    function resetFilter() { document.getElementById('fMulai').value = ''; document.getElementById('fSelesai').value = ''; document.getElementById('searchInput').value = ''; muatData(); }
+
+    document.addEventListener('DOMContentLoaded', () => { 
+        if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+        updateDropdownPekerja(); BersihkanForm(); muatData(); 
+    });
+</script>
+</body>
+</html>
