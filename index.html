@@ -21,7 +21,7 @@
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .stat-card { padding: 20px; border-radius: 12px; color: white; font-weight: bold; }
         
-        /* Form & Search */
+        /* Input & Search */
         .input-section { background: var(--card); padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; border-top: 6px solid var(--primary); }
         .search-bar { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
         .search-bar input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); }
@@ -50,7 +50,7 @@
         .txt-makan { color: #27ae60 !important; font-weight: bold; } 
         .txt-bold { font-weight: bold; }
 
-        button { cursor: pointer; border-radius: 8px; font-weight: bold; border: none; padding: 10px 15px; transition: 0.2s; }
+        button { cursor: pointer; border-radius: 8px; font-weight: bold; border: none; padding: 10px 15px; }
         #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display:flex; justify-content:center; align-items:center; z-index:9999; }
     </style>
 </head>
@@ -59,7 +59,7 @@
 <div id="loginOverlay">
     <div style="background: white; padding: 40px; border-radius: 20px; text-align: center; width: 320px;">
         <h2 style="color:#333; margin:0 0 20px 0;">🔐 FARMHOUSE LOGIN</h2>
-        <input type="password" id="pinInput" placeholder="Masukkan PIN" style="text-align:center; width:100%; margin-bottom:20px; font-size:2em; border: 2px solid #ddd; border-radius:10px;">
+        <input type="password" id="pinInput" style="text-align:center; width:100%; margin-bottom:20px; font-size:2em; border: 2px solid #ddd;">
         <button style="background:#27ae60; color:white; width:100%; padding:15px;" onclick="checkPin()">MASUK</button>
     </div>
 </div>
@@ -68,7 +68,7 @@
     <div class="header-app">
         <div>
             <h2 style="margin:0; color:var(--primary)">Farmhouse Bogor Official</h2>
-            <div id="syncStatus" class="sync-info">📍 Menghubungkan...</div>
+            <div id="syncStatus" class="sync-info">📍 Cluster Green Savana - Bogor</div>
         </div>
         <div style="display:flex; gap:10px">
             <button style="background:#2c3e50; color:white" onclick="toggleDarkMode()">🌙 Mode</button>
@@ -107,6 +107,7 @@
         <input type="text" id="cariNama" placeholder="🔍 Cari Nama Pekerja..." onkeyup="muatTabel()">
         <input type="date" id="fTglAwal" onchange="muatTabel()">
         <input type="date" id="fTglAkhir" onchange="muatTabel()">
+        <button onclick="resetFilter()" style="background:#e67e22; color:white;">RESET FILTER</button>
     </div>
 
     <div class="table-container">
@@ -152,57 +153,42 @@
     const db = firebase.database();
     let allData = [];
 
-    // FUNGSI CEK STATUS LOGIN SAAT REFRESH
     window.onload = function() {
-        if(localStorage.getItem("isLoggedIn") === "true") {
-            document.getElementById('loginOverlay').style.display = 'none';
-        }
+        if(localStorage.getItem("isLoggedIn") === "true") document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('tgl').value = new Date().toISOString().split('T')[0];
     };
 
     function checkPin() { 
         if(document.getElementById('pinInput').value === "1234") {
-            localStorage.setItem("isLoggedIn", "true"); // Simpan status login
+            localStorage.setItem("isLoggedIn", "true");
             document.getElementById('loginOverlay').style.display = 'none';
-        } else {
-            alert("PIN Salah!");
         }
     }
 
-    function logout() {
-        if(confirm("Keluar dari aplikasi?")) {
-            localStorage.removeItem("isLoggedIn"); // Hapus status login
-            location.reload();
-        }
-    }
+    function logout() { localStorage.removeItem("isLoggedIn"); location.reload(); }
 
-    // REALTIME DATABASE
     db.ref('/').on('value', (snapshot) => {
         const data = snapshot.val();
         allData = [];
-        const statusEl = document.getElementById('syncStatus');
-        if (!data) {
-            statusEl.innerHTML = "📍 Cluster Green Savana - Bogor ⚠️";
-            return;
-        }
+        if (!data) return;
 
+        // Sync Nama Pekerja
         const pekData = data.daftarPekerja || {};
-        const pekArr = Array.isArray(pekData) ? pekData : Object.values(pekData);
+        const pekArr = Object.values(pekData);
         const sel = document.getElementById('namaOrang');
         const cur = sel.value;
         sel.innerHTML = '<option value="">-- Pilih Nama --</option>';
         pekArr.sort().forEach(p => { if(p) sel.innerHTML += `<option value="${p}">${p}</option>`; });
         sel.value = cur;
 
+        // Sync Transaksi
         const target = data.earningData || data;
         Object.keys(target).forEach(key => {
             const item = target[key];
-            if (item && item.namaOrang) {
-                allData.push({ id: key, isRoot: !data.earningData, ...item });
-            }
+            if (item && item.namaOrang) allData.push({ id: key, isRoot: !data.earningData, ...item });
         });
 
-        statusEl.innerHTML = "📍 Cluster Green Savana - Bogor ✅ (" + allData.length + " Data)";
+        document.getElementById('syncStatus').innerHTML = "📍 Cluster Green Savana - Bogor ✅ (" + allData.length + " Data)";
         muatTabel();
     });
 
@@ -250,11 +236,11 @@
         updateDash(TK, TT, TKB);
     }
 
-    function hapusData(id, isRoot) { 
-        if(confirm("Hapus baris ini?")) {
-            const path = isRoot ? id : 'earningData/' + id;
-            db.ref(path).remove();
-        }
+    function resetFilter() {
+        document.getElementById('cariNama').value = "";
+        document.getElementById('fTglAwal').value = "";
+        document.getElementById('fTglAkhir').value = "";
+        muatTabel();
     }
 
     function simpanData() {
@@ -268,8 +254,17 @@
             makan: parseRaw(document.getElementById('makan').value),
             kasbon: parseRaw(document.getElementById('kasbon').value),
             isPotong: document.getElementById('potongKasbon').checked
+        }).then(() => {
+            resetFilter(); // OTOMATIS RESET AGAR DATA BARU LANGSUNG TERLIHAT
+            bersih();
         });
-        bersih();
+    }
+
+    function hapusData(id, isRoot) { 
+        if(confirm("Hapus baris ini?")) {
+            const path = isRoot ? id : 'earningData/' + id;
+            db.ref(path).remove();
+        }
     }
 
     function parseRaw(s) { return parseFloat(s.toString().replace(/\./g, '').replace(',', '.')) || 0; }
