@@ -50,7 +50,8 @@
         .txt-makan { color: #27ae60 !important; font-weight: bold; } 
         .txt-bold { font-weight: bold; }
 
-        button { cursor: pointer; border-radius: 8px; font-weight: bold; border: none; padding: 10px 15px; }
+        button { cursor: pointer; border-radius: 8px; font-weight: bold; border: none; padding: 10px 15px; transition: 0.2s; }
+        button:active { transform: scale(0.95); }
         #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display:flex; justify-content:center; align-items:center; z-index:9999; }
     </style>
 </head>
@@ -59,7 +60,7 @@
 <div id="loginOverlay">
     <div style="background: white; padding: 40px; border-radius: 20px; text-align: center; width: 320px;">
         <h2 style="color:#333; margin:0 0 20px 0;">🔐 FARMHOUSE LOGIN</h2>
-        <input type="password" id="pinInput" style="text-align:center; width:100%; margin-bottom:20px; font-size:2em; border: 2px solid #ddd;">
+        <input type="password" id="pinInput" placeholder="PIN" style="text-align:center; width:100%; margin-bottom:20px; font-size:2em; border: 2px solid #ddd; border-radius: 10px;">
         <button style="background:#27ae60; color:white; width:100%; padding:15px;" onclick="checkPin()">MASUK</button>
     </div>
 </div>
@@ -107,7 +108,7 @@
         <input type="text" id="cariNama" placeholder="🔍 Cari Nama Pekerja..." oninput="muatTabel()">
         <input type="date" id="fTglAwal" onchange="muatTabel()">
         <input type="date" id="fTglAkhir" onchange="muatTabel()">
-        <button onclick="resetFilter()" style="background:#e67e22; color:white;">RESET FILTER</button>
+        <button onclick="resetFilter()" style="background:#e67e22; color:white;">TAMPILKAN SEMUA</button>
     </div>
 
     <div class="table-container">
@@ -151,7 +152,7 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    let rawFirebaseData = {}; // Simpan snapshot asli
+    let currentFirebaseData = null;
 
     window.onload = function() {
         if(localStorage.getItem("isLoggedIn") === "true") document.getElementById('loginOverlay').style.display = 'none';
@@ -167,15 +168,20 @@
 
     function logout() { localStorage.removeItem("isLoggedIn"); location.reload(); }
 
-    // Listener Utama Firebase
+    // DETEKSI PERUBAHAN DATABASE SECARA REALTIME
     db.ref('/').on('value', (snapshot) => {
-        rawFirebaseData = snapshot.val() || {};
-        updateDropdownPekerja();
-        muatTabel();
+        currentFirebaseData = snapshot.val() || {};
+        refreshSemua();
     });
 
+    function refreshSemua() {
+        updateDropdownPekerja();
+        muatTabel();
+    }
+
     function updateDropdownPekerja() {
-        const pekData = rawFirebaseData.daftarPekerja || {};
+        if(!currentFirebaseData) return;
+        const pekData = currentFirebaseData.daftarPekerja || {};
         const pekArr = Object.values(pekData);
         const sel = document.getElementById('namaOrang');
         const cur = sel.value;
@@ -185,30 +191,31 @@
     }
 
     function muatTabel() {
+        if(!currentFirebaseData) return;
         const body = document.getElementById('tableBody');
         const cari = document.getElementById('cariNama').value.toLowerCase();
         const tAwal = document.getElementById('fTglAwal').value;
         const tAkhir = document.getElementById('fTglAkhir').value;
         
-        let displayList = [];
-        const target = rawFirebaseData.earningData || rawFirebaseData;
+        let allItems = [];
+        const target = currentFirebaseData.earningData || currentFirebaseData;
         
-        // Bersihkan data dari folder sistem
+        // Kumpulkan data valid
         Object.keys(target).forEach(key => {
             const item = target[key];
             if (item && item.namaOrang) {
-                displayList.push({ id: key, isRoot: !rawFirebaseData.earningData, ...item });
+                allItems.push({ id: key, isRoot: !currentFirebaseData.earningData, ...item });
             }
         });
 
-        // Filter
-        let filtered = displayList.filter(i => {
+        // Filter pencarian
+        let filtered = allItems.filter(i => {
             const mNama = !cari || i.namaOrang.toLowerCase().includes(cari);
             const mTgl = (!tAwal || i.tgl >= tAwal) && (!tAkhir || i.tgl <= tAkhir);
             return mNama && mTgl;
         }).sort((a,b) => new Date(b.tgl) - new Date(a.tgl));
 
-        body.innerHTML = '';
+        body.innerHTML = ''; // Kosongkan tabel sebelum render ulang
         let TC=0, TK=0, TT=0, TY=0, TG=0, TKB=0, TM=0;
 
         filtered.forEach(i => {
@@ -232,25 +239,25 @@
                 <td>${(i.guardian||0).toLocaleString()}</td>
                 <td class="txt-makan">${nMakan.toLocaleString()}</td>
                 <td class="txt-kasbon">${(i.kasbon||0).toLocaleString()}</td>
-                <td><button onclick="hapusData('${i.id}', ${i.isRoot})" style="background:rgba(200,200,200,0.1); color:inherit;">✕</button></td>
+                <td><button onclick="hapusData('${i.id}', ${i.isRoot})" style="background:rgba(200,200,200,0.2); color:inherit; padding: 5px 10px;">✕</button></td>
             </tr>`;
         });
         
         document.getElementById('footerTotal').innerHTML = `<td colspan="2">TOTAL</td><td>${TC.toLocaleString()}</td><td>${(TC/1000000).toFixed(1)}M</td><td>-</td><td>${Math.round(TK).toLocaleString()}</td><td>${Math.round(TT).toLocaleString()}</td><td>${Math.round(TY).toLocaleString()}</td><td>${TG.toLocaleString()}</td><td>${TM.toLocaleString()}</td><td>${TKB.toLocaleString()}</td><td></td>`;
         updateDash(TK, TT, TKB);
-        document.getElementById('syncStatus').innerHTML = `📍 Cluster Green Savana - Bogor ✅ (${displayList.length} Data)`;
+        document.getElementById('syncStatus').innerHTML = `📍 Cluster Green Savana - Bogor ✅ (${allItems.length} Data Total)`;
     }
 
     function resetFilter() {
         document.getElementById('cariNama').value = "";
         document.getElementById('fTglAwal').value = "";
         document.getElementById('fTglAkhir').value = "";
-        muatTabel(); // Paksa render ulang
+        muatTabel();
     }
 
     async function simpanData() {
         const n = document.getElementById('namaOrang').value;
-        if(!n) return alert("Pilih Nama!");
+        if(!n) return alert("Pilih Nama Pekerja!");
         
         const dataBaru = {
             namaOrang: n, tgl: document.getElementById('tgl').value,
@@ -262,17 +269,15 @@
             isPotong: document.getElementById('potongKasbon').checked
         };
 
-        try {
-            await db.ref('earningData').push(dataBaru);
-            bersih();
-            resetFilter(); // Pastikan filter kosong agar data baru muncul
-        } catch (e) {
-            alert("Gagal simpan!");
-        }
+        // Simpan ke Firebase
+        db.ref('earningData').push(dataBaru).then(() => {
+            bersih(); // Bersihkan form
+            resetFilter(); // Paksa tampilkan semua data agar data baru kelihatan
+        }).catch(err => alert("Gagal Simpan: " + err));
     }
 
     function hapusData(id, isRoot) { 
-        if(confirm("Hapus baris ini?")) {
+        if(confirm("Hapus baris ini secara permanen?")) {
             const path = isRoot ? id : 'earningData/' + id;
             db.ref(path).remove();
         }
@@ -292,15 +297,15 @@
         <div class="stat-card" style="background:#c0392b"><div>KASBON</div><div style="font-size:1.6em">Rp ${Math.round(kb).toLocaleString()}</div></div>`;
     }
     function bersih() { 
-        ["cegel","rate","guardian","kasbon"].forEach(id=>document.getElementById(id).value=''); 
-        document.getElementById('makan').value="10.000"; 
+        ["cegel","rate","guardian","kasbon"].forEach(id => document.getElementById(id).value = ''); 
+        document.getElementById('makan').value = "10.000"; 
         document.getElementById('potongKasbon').checked = false;
     }
     function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
-    function tambahPekerja() { const n = prompt("Nama:"); if(n) db.ref('daftarPekerja').push(n); }
-    function hapusPekerja() { const n = document.getElementById('namaOrang').value; if(n && confirm("Hapus?")) { db.ref('daftarPekerja').once('value').then(s => { s.forEach(c => { if(c.val() === n) c.ref.remove(); }); }); } }
-    function exportData() { db.ref('/').once('value').then(snap => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(snap.val(),null,2)],{type:'application/json'})); a.download='Backup_FB.json'; a.click(); }); }
-    function importData(inp) { const file = inp.files[0]; if(!file) return; const r = new FileReader(); r.onload=(e)=>{ db.ref('/').set(JSON.parse(e.target.result)).then(()=>alert("Berhasil!")); }; r.readAsText(file); }
+    function tambahPekerja() { const n = prompt("Masukkan Nama Pekerja Baru:"); if(n) db.ref('daftarPekerja').push(n); }
+    function hapusPekerja() { const n = document.getElementById('namaOrang').value; if(n && confirm("Hapus nama " + n + " dari daftar?")) { db.ref('daftarPekerja').once('value').then(s => { s.forEach(c => { if(c.val() === n) c.ref.remove(); }); }); } }
+    function exportData() { db.ref('/').once('value').then(snap => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(snap.val(),null,2)],{type:'application/json'})); a.download='Backup_Farmhouse.json'; a.click(); }); }
+    function importData(inp) { const file = inp.files[0]; if(!file) return; const r = new FileReader(); r.onload=(e)=>{ db.ref('/').set(JSON.parse(e.target.result)).then(()=>alert("Restore Berhasil!")); }; r.readAsText(file); }
 </script>
 </body>
 </html>
