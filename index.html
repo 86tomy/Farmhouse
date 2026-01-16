@@ -38,18 +38,16 @@
         tbody tr:nth-child(even) { background-color: var(--zebra); }
         th { background: #f2f2f2; color: #333; font-weight: bold; font-size: 0.75em; text-transform: uppercase; }
         
-        /* ATURAN WARNA HEADER SESUAI PERMINTAAN */
         .bg-earning { background: #27ae60 !important; color: white !important; }
         .bg-header-dark { background: #34495e !important; color: white !important; }
-        .bg-guard { background: #ffff00 !important; color: #000 !important; } /* Kuning Tulisan Hitam */
-        .bg-kasbon-head { background: #ff0000 !important; color: #000 !important; } /* Merah Tulisan Hitam */
+        .bg-guard { background: #ffff00 !important; color: #000 !important; } 
+        .bg-kasbon-head { background: #ff0000 !important; color: #000 !important; } 
         .row-total { background: #2c3e50 !important; color: white !important; font-weight: bold; }
         
-        /* ATURAN WARNA TULISAN BARIS */
         .txt-transfer { color: #e67e22 !important; font-weight: bold; } 
         .txt-tomy { color: #3498db !important; font-weight: bold; }     
         .txt-kasbon { color: #e74c3c !important; font-weight: bold; }    
-        .txt-makan { color: #27ae60 !important; font-weight: bold; } /* Hijau Nominal Makan */
+        .txt-makan { color: #27ae60 !important; font-weight: bold; } 
         .txt-bold { font-weight: bold; }
 
         button { cursor: pointer; border-radius: 8px; font-weight: bold; border: none; padding: 10px 15px; }
@@ -140,7 +138,6 @@
 </div>
 
 <script>
-    // Konfigurasi Firebase Anda
     const firebaseConfig = {
         apiKey: "AIzaSyBphHlavM7eC56wLJ1CUcSi4-yc5YwLcl0",
         authDomain: "farmhouse-dd33a.firebaseapp.com",
@@ -163,11 +160,10 @@
         const statusEl = document.getElementById('syncStatus');
 
         if (!data) {
-            statusEl.innerHTML = "📍 Cluster Green Savana - Bogor ⚠️ (Database Kosong)";
+            statusEl.innerHTML = "📍 Cluster Green Savana - Bogor ⚠️";
             return;
         }
 
-        // Sync Nama Pekerja
         const pekData = data.daftarPekerja || {};
         const pekArr = Array.isArray(pekData) ? pekData : Object.values(pekData);
         const sel = document.getElementById('namaOrang');
@@ -176,14 +172,15 @@
         pekArr.sort().forEach(p => { if(p) sel.innerHTML += `<option value="${p}">${p}</option>`; });
         sel.value = cur;
 
-        // Sync Transaksi
         const target = data.earningData || data;
         Object.keys(target).forEach(key => {
             const item = target[key];
-            if (item && item.namaOrang) allData.push({ id: key, ...item });
+            // Tambahkan flag 'isRoot' untuk identifikasi lokasi hapus
+            if (item && item.namaOrang) {
+                allData.push({ id: key, isRoot: !data.earningData, ...item });
+            }
         });
 
-        // Update Status Alamat sesuai permintaan
         statusEl.innerHTML = "📍 Cluster Green Savana - Bogor ✅ (" + allData.length + " Data)";
         muatTabel();
     });
@@ -224,12 +221,22 @@
                 <td>${(i.guardian||0).toLocaleString()}</td>
                 <td class="txt-makan">${nMakan.toLocaleString()}</td>
                 <td class="txt-kasbon">${(i.kasbon||0).toLocaleString()}</td>
-                <td><button onclick="hapusData('${i.id}')" style="background:rgba(200,200,200,0.2); color:inherit; border-radius:4px;">✕</button></td>
+                <td><button onclick="hapusData('${i.id}', ${i.isRoot})" style="background:rgba(200,200,200,0.2); color:inherit; border-radius:4px;">✕</button></td>
             </tr>`;
         });
         
         document.getElementById('footerTotal').innerHTML = `<td colspan="2">TOTAL</td><td>${TC.toLocaleString()}</td><td>${(TC/1000000).toFixed(1)}M</td><td>-</td><td>${Math.round(TK).toLocaleString()}</td><td>${Math.round(TT).toLocaleString()}</td><td>${Math.round(TY).toLocaleString()}</td><td>${TG.toLocaleString()}</td><td>${TM.toLocaleString()}</td><td>${TKB.toLocaleString()}</td><td></td>`;
         updateDash(TK, TT, TKB);
+    }
+
+    function hapusData(id, isRoot) { 
+        if(confirm("Hapus baris ini?")) {
+            // Logika deteksi folder
+            const path = isRoot ? id : 'earningData/' + id;
+            db.ref(path).remove()
+              .then(() => console.log("Hapus berhasil"))
+              .catch((err) => alert("Gagal hapus: " + err.message));
+        }
     }
 
     function simpanData() {
@@ -246,7 +253,7 @@
         });
         bersih();
     }
-    function hapusData(id) { if(confirm("Hapus baris ini?")) db.ref('earningData/'+id).remove(); }
+
     function parseRaw(s) { return parseFloat(s.toString().replace(/\./g, '').replace(',', '.')) || 0; }
     function formatInput(obj) { 
         let v = obj.value.replace(/[^,\d]/g, ''); let s = v.split(','); let si = s[0].length % 3;
