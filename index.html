@@ -3,55 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Farmhouse Bogor - Stable Cloud Sync</title>
+    <title>Farmhouse Bogor - Official Sync</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
-        :root { --primary: #27ae60; --bg: #f0f2f5; --card: #ffffff; --text: #333; --border: #ddd; }
+        :root { --bg: #f0f2f5; --card: #ffffff; --text: #333; --border: #ddd; }
         body.dark-mode { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --border: #333; }
         
         body { font-family: 'Segoe UI', sans-serif; margin: 20px; background: var(--bg); color: var(--text); transition: 0.3s; }
         .container { max-width: 1400px; margin: auto; }
-        
-        /* Header */
         .header-app { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px 20px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
         
-        /* Dashboard Cards */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .stat-card { padding: 20px; border-radius: 12px; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         
-        /* Form Section */
-        .input-section { background: var(--card); padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; align-items: center; border-top: 5px solid var(--primary); }
+        .input-section { background: var(--card); padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; align-items: center; border-top: 5px solid #27ae60; }
         .input-group { display: flex; flex-direction: column; }
-        .input-group label { font-size: 0.85em; font-weight: 600; margin-bottom: 5px; }
         input, select { padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); }
-        .pekerja-group { grid-column: span 2; }
         
-        /* Search & Filter */
-        .filter-container { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .filter-container { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         
-        /* Table */
         .table-container { overflow-x: auto; background: var(--card); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         table { width: 100%; border-collapse: collapse; min-width: 1200px; }
         th, td { border: 1px solid var(--border); padding: 12px; text-align: center; }
-        th { background: rgba(0,0,0,0.05); font-size: 0.85em; }
+        th { background: rgba(0,0,0,0.05); }
+        
         .bg-earning { background: #27ae60 !important; color: white; }
         .bg-kasbon { background: #e74c3c !important; color: white; }
         .row-total { background: #2c3e50 !important; color: white !important; font-weight: bold; }
         
         button { cursor: pointer; border-radius: 8px; font-weight: bold; border: none; padding: 10px 15px; }
-        .btn-add { background: var(--primary); color: white; height: 42px; width: 100%; }
-        
-        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:flex; justify-content:center; align-items:center; z-index:9999; }
     </style>
 </head>
-<body>
-
-<div id="loginOverlay">
+<body class="dark-mode"> <div id="loginOverlay">
     <div style="background: white; padding: 30px; border-radius: 15px; text-align: center; width: 320px;">
-        <h2 style="color: #333;">🔐 Login Bogor</h2>
-        <input type="password" id="pinInput" placeholder="PIN" style="text-align:center; width:100%; margin-bottom:15px; font-size:1.5em; padding:10px;">
-        <button class="btn-add" onclick="checkPin()">MASUK</button>
+        <h2 style="color:#333">🔐 Login Bogor</h2>
+        <input type="password" id="pinInput" style="text-align:center; width:100%; margin-bottom:15px; font-size:1.5em; padding:10px;">
+        <button style="background:#27ae60; color:white; width:100%" onclick="checkPin()">MASUK</button>
     </div>
 </div>
 
@@ -73,12 +62,12 @@
     <div id="summaryStats" class="stats-grid"></div>
 
     <div class="input-section">
-        <div class="input-group pekerja-group">
+        <div class="input-group" style="grid-column: span 2;">
             <label>Nama Pekerja</label>
-            <div style="display: flex; gap: 8px;">
-                <select id="namaOrang" style="flex: 1;"></select>
-                <button onclick="tambahPekerja()" style="background:#3498db; color:white; width:42px">+</button>
-                <button onclick="hapusPekerja()" style="background:#e74c3c; color:white; width:42px">-</button>
+            <div style="display: flex; gap: 5px;">
+                <select id="namaOrang" style="flex:1"></select>
+                <button onclick="tambahPekerja()" style="background:#3498db; color:white">+</button>
+                <button onclick="hapusPekerja()" style="background:#e74c3c; color:white">-</button>
             </div>
         </div>
         <div class="input-group"><label>Tanggal</label><input type="date" id="tgl"></div>
@@ -89,15 +78,13 @@
         <div class="input-group">
             <label>Kasbon</label>
             <input type="text" id="kasbon" onkeyup="formatInput(this)">
-            <label style="font-size:0.75em; margin-top:5px; color:red; font-weight:bold"><input type="checkbox" id="potongKasbon"> Potong Transfer?</label>
+            <label style="font-size:0.7em; margin-top:5px; color:red"><input type="checkbox" id="potongKasbon"> Potong Transfer?</label>
         </div>
-        <div class="input-group">
-            <button class="btn-add" onclick="simpanData()">SIMPAN</button>
-        </div>
+        <button style="background:#27ae60; color:white; height:42px; margin-top:15px" onclick="simpanData()">SIMPAN</button>
     </div>
 
     <div class="filter-container">
-        <input type="text" id="cariNama" placeholder="🔍 Cari nama pekerja..." onkeyup="muatTabel()" style="flex:1; padding:10px; border-radius:8px; border:1px solid var(--border);">
+        <input type="text" id="cariNama" placeholder="🔍 Cari nama..." onkeyup="muatTabel()" style="flex:1">
         <input type="date" id="fTglAwal" onchange="muatTabel()">
         <input type="date" id="fTglAkhir" onchange="muatTabel()">
     </div>
@@ -112,9 +99,9 @@
                     <th>Guard</th><th>Makan</th><th class="bg-kasbon">Kasbon</th><th>Aksi</th>
                 </tr>
                 <tr>
-                    <th class="bg-earning">Cegel</th><th class="bg-earning">M</th><th class="bg-earning">Rate</th><th class="bg-earning">Total</th>
+                    <th class="bg-earning">Cegel</th><th class="bg-earning">M</th><th class="bg-earning">Rate</th><th class="bg-earning">Rupiah</th>
                     <th style="background:#d35400; color:white">Transfer</th><th style="background:#2980b9; color:white">Tomy</th>
-                    <th>Guard</th><th>Makan</th><th class="bg-kasbon">Kasbon</th><th></th>
+                    <th>Guard</th><th>Makan</th><th class="bg-kasbon">Total</th><th></th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -138,33 +125,32 @@
     const db = firebase.database();
     let allData = [];
 
-    function checkPin() { if(document.getElementById('pinInput').value === "1234") document.getElementById('loginOverlay').style.display='none'; else alert("Salah!"); }
+    function checkPin() { if(document.getElementById('pinInput').value === "1234") document.getElementById('loginOverlay').style.display='none'; }
 
-    // MONITORING DATA AGRESIF
+    // MONITORING PERSIS KODE DEBUG
     db.ref('/').on('value', (snapshot) => {
+        const data = snapshot.val();
         allData = [];
-        const root = snapshot.val();
-        if (root) {
-            // Tarik Nama Pekerja
-            const pek = root.daftarPekerja || [];
-            const sel = document.getElementById('namaOrang');
-            const valSebelumnya = sel.value;
-            sel.innerHTML = '<option value="">-- Pilih Nama --</option>';
-            (Array.isArray(pek) ? pek : Object.values(pek)).sort().forEach(p => { if(p) sel.innerHTML += `<option value="${p}">${p}</option>`; });
-            sel.value = valSebelumnya;
-
-            // Tarik Data Transaksi (Cari di root atau folder earningData)
-            const cariData = (obj) => {
-                Object.keys(obj).forEach(k => {
-                    if (obj[k] && obj[k].namaOrang && obj[k].tgl) {
-                        allData.push({ id: k, ...obj[k] });
-                    } else if (typeof obj[k] === 'object' && k !== 'daftarPekerja') {
-                        cariData(obj[k]);
-                    }
-                });
-            };
-            cariData(root);
+        if (!data) {
+            document.getElementById('syncStatus').innerText = "Terhubung ✅ (KOSONG)";
+            return;
         }
+
+        // Ambil Data Pekerja
+        const pek = data.daftarPekerja || [];
+        const sel = document.getElementById('namaOrang');
+        const cur = sel.value;
+        sel.innerHTML = '<option value="">-- Pilih --</option>';
+        (Array.isArray(pek) ? pek : Object.values(pek)).sort().forEach(p => { if(p) sel.innerHTML += `<option value="${p}">${p}</option>`; });
+        sel.value = cur;
+
+        // Ambil Transaksi (Logika Debug)
+        const target = data.earningData || data;
+        Object.keys(target).forEach(key => {
+            const item = target[key];
+            if (item && item.namaOrang) allData.push({ id: key, ...item });
+        });
+
         document.getElementById('syncStatus').innerText = "Terhubung ✅ (" + allData.length + " Data)";
         muatTabel();
     });
@@ -200,9 +186,9 @@
                 <td style="color:#d35400">${Math.round(hTomy).toLocaleString()}</td>
                 <td>${(i.guardian||0).toLocaleString()}</td><td>${(i.makan||0).toLocaleString()}</td>
                 <td style="color:red">${(i.kasbon||0).toLocaleString()}</td>
-                <td><button onclick="hapusData('${i.id}')" style="background:#e74c3c; color:white; padding:5px 10px">✕</button></td></tr>`;
+                <td><button onclick="hapusData('${i.id}')" style="background:#e74c3c; color:white">✕</button></td></tr>`;
         });
-
+        
         document.getElementById('footerTotal').innerHTML = `<td colspan="2">TOTAL</td><td>${TC.toLocaleString()}</td><td>${(TC/1000000).toFixed(1)}M</td><td>-</td><td>${Math.round(TK).toLocaleString()}</td><td>${Math.round(TT).toLocaleString()}</td><td>${Math.round(TY).toLocaleString()}</td><td>${TG.toLocaleString()}</td><td>${TM.toLocaleString()}</td><td>${TKB.toLocaleString()}</td><td></td>`;
         updateDash(TK, TT, TKB);
     }
@@ -230,13 +216,18 @@
         if (ri) { r += (si ? '.' : '') + ri.join('.'); }
         obj.value = s[1] != undefined ? r + ',' + s[1] : r;
     }
-    function updateDash(k, t, kb) { document.getElementById('summaryStats').innerHTML = `<div class="stat-card" style="background:#27ae60"><div>Kotor</div><div style="font-size:1.5em; font-weight:bold">Rp ${Math.round(k).toLocaleString()}</div></div><div class="stat-card" style="background:#2980b9"><div>Transfer</div><div style="font-size:1.5em; font-weight:bold">Rp ${Math.round(t).toLocaleString()}</div></div><div class="stat-card" style="background:#e67e22"><div>Kasbon</div><div style="font-size:1.5em; font-weight:bold">Rp ${Math.round(kb).toLocaleString()}</div></div>`; }
+    function updateDash(k, t, kb) { 
+        document.getElementById('summaryStats').innerHTML = `
+        <div class="stat-card" style="background:#27ae60"><div>Kotor</div><div style="font-size:1.5em; font-weight:bold">Rp ${Math.round(k).toLocaleString()}</div></div>
+        <div class="stat-card" style="background:#2980b9"><div>Transfer</div><div style="font-size:1.5em; font-weight:bold">Rp ${Math.round(t).toLocaleString()}</div></div>
+        <div class="stat-card" style="background:#e67e22"><div>Kasbon</div><div style="font-size:1.5em; font-weight:bold">Rp ${Math.round(kb).toLocaleString()}</div></div>`;
+    }
     function bersih() { ["cegel","rate","guardian","kasbon"].forEach(id=>document.getElementById(id).value=''); document.getElementById('tgl').value = new Date().toISOString().split('T')[0]; document.getElementById('makan').value="10.000"; }
     function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
     function tambahPekerja() { const n = prompt("Nama:"); if(n) db.ref('daftarPekerja').once('value').then(s=>{ let d=s.val()||[]; d.push(n); db.ref('daftarPekerja').set(d); }); }
     function hapusPekerja() { const n = document.getElementById('namaOrang').value; if(n && confirm("Hapus?")) db.ref('daftarPekerja').once('value').then(s=>{ let d=s.val()||[]; d=d.filter(p=>p!==n); db.ref('daftarPekerja').set(d); }); }
     function exportData() { db.ref('/').once('value').then(snap => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(snap.val(),null,2)],{type:'application/json'})); a.download='Backup.json'; a.click(); }); }
-    function importData(inp) { const file = inp.files[0]; if(!file) return; const r = new FileReader(); r.onload=(e)=>{ db.ref('/').set(JSON.parse(e.target.result)).then(()=>alert("Selesai!")); }; r.readAsText(file); }
+    function importData(inp) { const file = inp.files[0]; if(!file) return; const r = new FileReader(); r.onload=(e)=>{ db.ref('/').set(JSON.parse(e.target.result)).then(()=>alert("Berhasil!")); }; r.readAsText(file); }
     
     document.getElementById('tgl').value = new Date().toISOString().split('T')[0];
 </script>
