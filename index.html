@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Farmhouse Bogor - Cloud Sync Fix</title>
+    <title>Farmhouse Bogor - Cloud Sync FINAL</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 20px; background: #f0f2f5; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 20px; background: #f0f2f5; color: #333; }
         .container { max-width: 1400px; margin: auto; }
         .header-app { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 20px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .stat-card { padding: 20px; border-radius: 12px; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .input-section { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; align-items: center; border-top: 5px solid #27ae60; }
         .input-group { display: flex; flex-direction: column; width: 100%; }
-        .input-group label { font-size: 0.85em; font-weight: 600; margin-bottom: 5px; }
-        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+        .input-group label { font-size: 0.85em; font-weight: 600; margin-bottom: 5px; color: #555; }
+        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none; }
         .pekerja-group { grid-column: span 2; }
         .filter-container { margin-bottom: 15px; background: white; padding: 15px; border-radius: 12px; display: flex; flex-wrap: wrap; gap: 15px; align-items: center; }
         .table-container { overflow-x: auto; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -24,17 +24,18 @@
         th { background: #f8f9fa; font-size: 0.85em; }
         tbody tr:nth-child(even) { background-color: #f9fbf9 !important; }
         button { cursor: pointer; border-radius: 8px; font-weight: bold; border: none; padding: 10px 15px; }
-        .btn-add { background: #27ae60; color: white; width: 100%; height: 42px; }
-        .bg-earning { background: #27ae60; color: white; }
-        .bg-kasbon { background: #e74c3c; color: white; }
+        .btn-add { background: #27ae60; color: white; height: 42px; width: 100%; }
+        .bg-earning { background-color: #27ae60 !important; color: white; }
+        .bg-kasbon { background-color: #e74c3c !important; color: white; }
+        .row-total { background-color: #2c3e50 !important; color: white !important; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="loginOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 9999;">
     <div style="background: white; padding: 30px; border-radius: 15px; text-align: center; width: 320px;">
-        <h2>🔐 Login Bogor</h2>
-        <input type="password" id="pinInput" placeholder="PIN" style="text-align:center; width:100%; margin-bottom:15px; font-size:1.5em; padding:10px;">
+        <h2 style="color: #333;">🔐 Login Bogor</h2>
+        <input type="password" id="pinInput" placeholder="PIN" style="text-align:center; width:100%; margin-bottom:15px; font-size:1.5em; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
         <button class="btn-add" onclick="checkPin()">MASUK</button>
     </div>
 </div>
@@ -43,7 +44,7 @@
     <div class="header-app">
         <div>
             <h2 style="margin:0">Farmhouse Cloud Sync</h2>
-            <small>Status: <span id="syncStatus">Menghubungkan...</span></small>
+            <small>📍 Region: Asia-Southeast (Status: <span id="syncStatus">Menghubungkan...</span>)</small>
         </div>
         <div>
             <button style="background:#3498db; color:white" onclick="exportFromFirebase()">💾 Backup</button>
@@ -60,8 +61,8 @@
             <label>Nama Pekerja</label>
             <div style="display: flex; gap: 8px;">
                 <select id="namaOrang" style="flex: 1;"></select>
-                <button onclick="tambahPekerjaBaru()" style="background:#3498db; color:white">+</button>
-                <button onclick="hapusPekerjaDaftar()" style="background:#e74c3c; color:white">-</button>
+                <button type="button" onclick="tambahPekerjaBaru()" style="background:#3498db; color:white">+</button>
+                <button type="button" onclick="hapusPekerjaDaftar()" style="background:#e74c3c; color:white">-</button>
             </div>
         </div>
         <div class="input-group"><label>Tanggal</label><input type="date" id="tgl"></div>
@@ -72,12 +73,12 @@
         <div class="input-group">
             <label>Kasbon</label>
             <input type="text" id="kasbon" onkeyup="formatInput(this)">
-            <label style="font-size:0.7em"><input type="checkbox" id="potongKasbon"> Potong Transfer?</label>
+            <div style="margin-top:5px"><input type="checkbox" id="potongKasbon"> <label style="font-size:0.8em; color:red">Potong Transfer?</label></div>
         </div>
         <div class="input-group">
             <input type="hidden" id="editId">
             <button class="btn-add" id="btnAdd" onclick="simpanData()">SIMPAN</button>
-            <button style="background:#f39c12; color:white; display:none" id="btnUpdate" onclick="updateData()">UPDATE</button>
+            <button style="background:#f39c12; color:white; display:none; height:42px;" id="btnUpdate" onclick="updateData()">UPDATE</button>
         </div>
     </div>
 
@@ -91,21 +92,29 @@
         <table>
             <thead>
                 <tr>
-                    <th>Nama</th><th>Tanggal</th><th class="bg-earning">Cegel</th><th class="bg-earning">Rate</th><th class="bg-earning">Kotor</th>
-                    <th style="background:#d35400; color:white">Transfer</th><th style="background:#2980b9; color:white">Tomy</th>
+                    <th rowspan="2">Nama</th><th rowspan="2">Tanggal</th>
+                    <th colspan="3" class="bg-earning">Earning</th>
+                    <th colspan="2" style="background:#34495e; color:white">Bagi 50/50</th>
                     <th>Guard</th><th>Makan</th><th class="bg-kasbon">Kasbon</th><th>Aksi</th>
+                </tr>
+                <tr>
+                    <th class="bg-earning">Cegel</th><th class="bg-earning">Rate</th><th class="bg-earning">Kotor</th>
+                    <th style="background:#d35400; color:white">Transfer</th><th style="background:#2980b9; color:white">Tomy</th>
+                    <th>DD/DE</th><th>U. Makan</th><th class="bg-kasbon">Total</th><th></th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
+            <tfoot><tr id="footerTotal" class="row-total"></tr></tfoot>
         </table>
     </div>
 </div>
 
 <script>
+    // --- DATABASE URL SUDAH DIPERBAIKI KE REGION ASIA ---
     const firebaseConfig = {
         apiKey: "AIzaSyBphHlavM7eC56wLJ1CUcSi4-yc5YwLcl0",
         authDomain: "farmhouse-dd33a.firebaseapp.com",
-        databaseURL: "https://farmhouse-dd33a-default-rtdb.firebaseio.com",
+        databaseURL: "https://farmhouse-dd33a-default-rtdb.asia-southeast1.firebasedatabase.app",
         projectId: "farmhouse-dd33a",
         storageBucket: "farmhouse-dd33a.firebasestorage.app",
         messagingSenderId: "527376522624",
@@ -118,24 +127,13 @@
 
     function checkPin() { if(document.getElementById('pinInput').value === "1234") document.getElementById('loginOverlay').style.display='none'; else alert("Salah!"); }
 
-    // --- LOGIKA PENARIKAN DATA SUPER AGRESIF ---
-    db.ref('/').on('value', (snapshot) => {
+    // Sync Data Transaksi
+    db.ref('earningData').on('value', (snapshot) => {
         allData = [];
-        const root = snapshot.val();
-        console.log("Data diterima dari Firebase:", root);
-
-        if (root) {
-            // Cek folder earningData
-            let dataSapi = root.earningData ? root.earningData : root;
-            
-            // Loop melalui data (mendukung Array 0,1,2 maupun Object ID acak)
-            Object.keys(dataSapi).forEach(key => {
-                if (key !== 'daftarPekerja' && typeof dataSapi[key] === 'object') {
-                    allData.push({ id: key, ...dataSapi[key] });
-                }
-            });
+        const raw = snapshot.val();
+        if(raw) {
+            Object.keys(raw).forEach(key => { if(raw[key]) allData.push({ id: key, ...raw[key] }); });
         }
-
         document.getElementById('syncStatus').innerText = "Terhubung ✅ (" + allData.length + " Data)";
         muatDataTampilan();
     });
@@ -145,41 +143,47 @@
         const d = s.val() || [];
         const sel = document.getElementById('namaOrang');
         sel.innerHTML = '<option value="">-- Pilih --</option>';
-        (Array.isArray(d) ? d : Object.values(d)).forEach(p => {
-            if(p) sel.innerHTML += `<option value="${p}">${p}</option>`;
-        });
+        (Array.isArray(d) ? d : Object.values(d)).sort().forEach(p => { if(p) sel.innerHTML += `<option value="${p}">${p}</option>`; });
     });
 
     function muatDataTampilan() {
         const body = document.getElementById('tableBody');
         const cari = document.getElementById('cariNama').value.toLowerCase();
+        const tMulai = document.getElementById('filterTglMulai').value;
+        const tAkhir = document.getElementById('filterTglAkhir').value;
         body.innerHTML = '';
 
-        let filtered = allData.filter(i => !cari || (i.namaOrang && i.namaOrang.toLowerCase().includes(cari)));
-        filtered.sort((a,b) => new Date(b.tgl) - new Date(a.tgl));
+        let filtered = allData.filter(i => {
+            const mNama = !cari || (i.namaOrang && i.namaOrang.toLowerCase().includes(cari));
+            let mTgl = true;
+            if (tMulai) mTgl = mTgl && (i.tgl >= tMulai);
+            if (tAkhir) mTgl = mTgl && (i.tgl <= tAkhir);
+            return mNama && mTgl;
+        }).sort((a,b) => new Date(b.tgl) - new Date(a.tgl));
+
+        let TC=0, TK=0, TT=0, TY=0, TG=0, TKB=0, TM=0;
 
         filtered.forEach(i => {
-            let kotor = ( (i.cegel||0) / 1000000) * (i.rate||0);
+            let kotor = ((i.cegel||0)/1000000) * (i.rate||0);
             let bagiDua = (kotor - (i.guardian||0)) / 2;
-            let hTomy = bagiDua - (i.makan||0);
-            let hTrans = i.isPotong ? ((bagiDua + (i.makan||0)) - (i.kasbon||0)) : (bagiDua + (i.makan||0));
+            let nMakan = i.makan || 0;
+            let hTomy = bagiDua - nMakan;
+            let hTrans = i.isPotong ? ((bagiDua + nMakan) - (i.kasbon||0)) : (bagiDua + nMakan);
+
+            TC += (i.cegel||0); TK += kotor; TT += hTrans; TY += hTomy; TG += (i.guardian||0); TKB += (i.kasbon||0); TM += nMakan;
 
             body.innerHTML += `<tr>
-                <td>${i.namaOrang}</td><td>${i.tgl}</td>
-                <td>${(i.cegel||0).toLocaleString()}</td><td>${(i.rate||0).toLocaleString()}</td>
-                <td>${Math.round(kotor).toLocaleString()}</td>
-                <td style="font-weight:bold">${Math.round(hTrans).toLocaleString()}</td>
-                <td>${Math.round(hTomy).toLocaleString()}</td>
-                <td>${(i.guardian||0).toLocaleString()}</td>
-                <td>${(i.makan||0).toLocaleString()}</td>
+                <td><b>${i.namaOrang}</b></td><td>${i.tgl}</td>
+                <td>${(i.cegel||0).toLocaleString()}</td><td>${(i.rate||0).toLocaleString()}</td><td>${Math.round(kotor).toLocaleString()}</td>
+                <td style="font-weight:bold">${Math.round(hTrans).toLocaleString()}</td><td>${Math.round(hTomy).toLocaleString()}</td>
+                <td>${(i.guardian||0).toLocaleString()}</td><td>${nMakan.toLocaleString()}</td>
                 <td style="color:red">${(i.kasbon||0).toLocaleString()}</td>
-                <td><button onclick="hapusData('${i.id}')">✕</button></td>
-            </tr>`;
+                <td><button style="background:#e74c3c; color:white; padding:4px 8px" onclick="hapusData('${i.id}')">✕</button></td></tr>`;
         });
-        updateDash();
+        document.getElementById('footerTotal').innerHTML = `<td colspan="2">TOTAL</td><td>${TC.toLocaleString()}</td><td>-</td><td>${Math.round(TK).toLocaleString()}</td><td>${Math.round(TT).toLocaleString()}</td><td>${Math.round(TY).toLocaleString()}</td><td>${TG.toLocaleString()}</td><td>${TM.toLocaleString()}</td><td>${TKB.toLocaleString()}</td><td></td>`;
+        updateDash(TK, TT, TKB);
     }
 
-    // CRUD & Helpers
     function simpanData() {
         const n = document.getElementById('namaOrang').value;
         if(!n) return alert("Pilih Nama!");
@@ -198,17 +202,17 @@
     function hapusData(id) { if(confirm("Hapus?")) db.ref('earningData/'+id).remove(); }
     function parseRaw(s) { return parseFloat(s.toString().replace(/\./g, '').replace(',', '.')) || 0; }
     function formatInput(obj) { 
-        let v = obj.value.replace(/[^,\d]/g, '');
-        let s = v.split(',');
-        let si = s[0].length % 3;
-        let r = s[0].substr(0, si);
-        let ri = s[0].substr(si).match(/\d{3}/gi);
+        let v = obj.value.replace(/[^,\d]/g, ''); let s = v.split(','); let si = s[0].length % 3;
+        let r = s[0].substr(0, si); let ri = s[0].substr(si).match(/\d{3}/gi);
         if (ri) { r += (si ? '.' : '') + ri.join('.'); }
         obj.value = s[1] != undefined ? r + ',' + s[1] : r;
     }
-    function updateDash() { /* Dash logic simplified for speed */ }
-    function bersih() { ["cegel","rate","guardian","kasbon"].forEach(id=>document.getElementById(id).value=''); document.getElementById('tgl').value = new Date().toISOString().split('T')[0]; }
+    function updateDash(k, t, kb) { document.getElementById('summaryStats').innerHTML = `<div class="stat-card" style="background:#27ae60"><div>Kotor</div><div style="font-size:1.5em; font-weight:bold">Rp ${Math.round(k).toLocaleString()}</div></div><div class="stat-card" style="background:#2980b9"><div>Transfer</div><div style="font-size:1.5em; font-weight:bold">Rp ${Math.round(t).toLocaleString()}</div></div><div class="stat-card" style="background:#e67e22"><div>Kasbon</div><div style="font-size:1.5em; font-weight:bold">Rp ${Math.round(kb).toLocaleString()}</div></div>`; }
+    function bersih() { ["cegel","rate","guardian","kasbon"].forEach(id=>document.getElementById(id).value=''); document.getElementById('tgl').value = new Date().toISOString().split('T')[0]; document.getElementById('potongKasbon').checked = false; }
     function tambahPekerjaBaru() { const n = prompt("Nama:"); if(n) db.ref('daftarPekerja').once('value').then(s=>{ let d=s.val()||[]; d.push(n); db.ref('daftarPekerja').set(d); }); }
+    function hapusPekerjaDaftar() { const n = document.getElementById('namaOrang').value; if(n && confirm("Hapus dari daftar?")) db.ref('daftarPekerja').once('value').then(s=>{ let d=s.val()||[]; d=d.filter(p=>p!==n); db.ref('daftarPekerja').set(d); }); }
+    function exportFromFirebase() { db.ref('/').once('value').then(snap => { const blob = new Blob([JSON.stringify(snap.val(), null, 2)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Backup_Farmhouse.json`; a.click(); }); }
+    function importToFirebase(input) { const file = input.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = (e) => { try { db.ref('/').update(JSON.parse(e.target.result)); alert("Selesai!"); } catch(err) { alert("Error!"); } }; reader.readAsText(file); }
     
     document.getElementById('tgl').value = new Date().toISOString().split('T')[0];
 </script>
