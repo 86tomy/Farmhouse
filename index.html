@@ -7,65 +7,69 @@
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
-        :root { --primary: #27ae60; --dark: #2c3e50; --bg: #f0f2f5; --card: #ffffff; --text: #333; --border: #ccc; }
-        body.dark-mode { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --border: #444; }
+        :root { --primary: #27ae60; --bg: #f8f9fa; --card: #ffffff; --text: #333; --border: #ddd; --zebra: #f2f2f2; }
+        body.dark-mode { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --border: #333; --zebra: #252525; }
         
-        body { font-family: 'Segoe UI', sans-serif; margin: 20px; background: var(--bg); color: var(--text); }
-        .container { max-width: 1500px; margin: auto; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 20px; background: var(--bg); color: var(--text); transition: 0.3s; }
+        .container { max-width: 1550px; margin: auto; }
         
+        /* Header & Dashboard */
         .header-app { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        
-        /* Dashboard */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .stat-card { padding: 20px; border-radius: 12px; color: white; font-weight: bold; }
+        .stat-card { padding: 20px; border-radius: 12px; color: white; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
-        /* Form Input */
+        /* Form Section */
         .input-section { background: var(--card); padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; border-top: 6px solid var(--primary); }
         .input-group { display: flex; flex-direction: column; }
         .input-group label { font-size: 0.8em; font-weight: bold; margin-bottom: 5px; color: var(--primary); }
-        input, select { padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); }
+        input, select { padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); outline: none; }
         
-        /* Search */
-        .search-bar { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
-        .search-bar input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); }
+        /* TABLE ZEBRA & STRUCTURE */
+        .table-container { overflow-x: auto; background: var(--card); border-radius: 12px; box-shadow: 0 4px 25px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; min-width: 1350px; font-size: 0.95em; }
+        th, td { border: 1px solid var(--border); padding: 10px 8px; text-align: center; }
+        
+        /* Zebra Grid Logic */
+        tbody tr:nth-child(even) { background-color: var(--zebra); }
+        tbody tr:hover { background-color: rgba(39, 174, 96, 0.1); } /* Highlight saat kursor lewat */
 
-        /* TABLE - STRUKTUR AWAL */
-        .table-container { overflow-x: auto; background: var(--card); border-radius: 12px; }
-        table { width: 100%; border-collapse: collapse; min-width: 1300px; font-size: 0.9em; }
-        th, td { border: 1px solid var(--border); padding: 10px 5px; text-align: center; }
-        
-        /* Header Colors */
         th { background: #f2f2f2; color: #333; font-weight: bold; font-size: 0.75em; text-transform: uppercase; }
-        .dark-mode th { background: #2c2c2c; color: #eee; }
+        .dark-mode th { background: #2c2c2c; color: #bbb; }
         
-        .bg-earning { background-color: #27ae60 !important; color: white !important; }
-        .bg-transfer { background-color: #d35400 !important; color: white !important; }
-        .bg-tomy { background-color: #2980b9 !important; color: white !important; }
-        .bg-kasbon { background-color: #c0392b !important; color: white !important; }
-        .row-total { background-color: #2c3e50 !important; color: white !important; font-weight: bold; }
+        /* Colors */
+        .bg-earning { background: #27ae60 !important; color: white !important; }
+        .bg-header-dark { background: #34495e !important; color: white !important; }
+        .row-total { background: #2c3e50 !important; color: white !important; font-weight: bold; }
+        
+        .txt-transfer { color: #e67e22 !important; font-weight: bold; } 
+        .txt-tomy { color: #3498db !important; font-weight: bold; }     
+        .txt-kasbon { color: #e74c3c !important; font-weight: bold; }    
+        .txt-bold { font-weight: bold; }
 
-        button { cursor: pointer; border-radius: 8px; font-weight: bold; border: none; padding: 10px; }
-        #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:flex; justify-content:center; align-items:center; z-index:9999; }
+        button { cursor: pointer; border-radius: 8px; font-weight: bold; border: none; padding: 10px 15px; transition: 0.2s; }
+        button:active { transform: scale(0.95); }
+        #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display:flex; justify-content:center; align-items:center; z-index:9999; }
     </style>
 </head>
 <body class="dark-mode">
 
 <div id="loginOverlay">
-    <div style="background: white; padding: 40px; border-radius: 20px; text-align: center; width: 320px;">
-        <h2 style="color:#333">🔐 LOGIN BOGOR</h2>
-        <input type="password" id="pinInput" style="text-align:center; width:100%; margin-bottom:20px; font-size:2em; padding:5px;">
-        <button style="background:#27ae60; color:white; width:100%; padding:15px;" onclick="checkPin()">MASUK</button>
+    <div style="background: white; padding: 40px; border-radius: 20px; text-align: center; width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <h2 style="color:#333; margin:0 0 20px 0;">🔐 FARMHOUSE BOGOR</h2>
+        <input type="password" id="pinInput" style="text-align:center; width:100%; margin-bottom:20px; font-size:2em; border: 2px solid #ddd; border-radius: 10px; padding: 5px;">
+        <button style="background:#27ae60; color:white; width:100%; padding:15px; font-size:1.1em;" onclick="checkPin()">MASUK SISTEM</button>
     </div>
 </div>
 
 <div class="container">
     <div class="header-app">
-        <h2>Farmhouse Bogor Cloud</h2>
+        <h2 style="margin:0; color:var(--primary)">Farmhouse Bogor <span style="font-weight: normal; color:var(--text); font-size: 0.7em;">Official Cloud</span></h2>
         <div style="display:flex; gap:10px">
             <button style="background:#2c3e50; color:white" onclick="toggleDarkMode()">🌙 Mode</button>
             <button style="background:#3498db; color:white" onclick="exportData()">💾 Backup</button>
             <button style="background:#2ecc71; color:white" onclick="document.getElementById('importFile').click()">📂 Restore</button>
             <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(this)">
+            <button style="background:#7f8c8d; color:white" onclick="location.reload()">🔒 Keluar</button>
         </div>
     </div>
 
@@ -76,12 +80,12 @@
             <label>NAMA PEKERJA</label>
             <div style="display: flex; gap: 5px;">
                 <select id="namaOrang" style="flex:1"></select>
-                <button onclick="tambahPekerja()" style="background:#3498db; color:white">+</button>
-                <button onclick="hapusPekerja()" style="background:#e74c3c; color:white">-</button>
+                <button onclick="tambahPekerja()" style="background:#3498db; color:white; width:40px;">+</button>
+                <button onclick="hapusPekerja()" style="background:#e74c3c; color:white; width:40px;">-</button>
             </div>
         </div>
         <div class="input-group"><label>TANGGAL</label><input type="date" id="tgl"></div>
-        <div class="input-group"><label>CEGEL</label><input type="text" id="cegel" onkeyup="formatInput(this)"></div>
+        <div class="input-group"><label>CEGEL (Raw)</label><input type="text" id="cegel" onkeyup="formatInput(this)"></div>
         <div class="input-group"><label>RATE</label><input type="text" id="rate" onkeyup="formatInput(this)"></div>
         <div class="input-group"><label>GUARD DE + DD</label><input type="text" id="guardian" onkeyup="formatInput(this)"></div>
         <div class="input-group"><label>MAKAN</label><input type="text" id="makan" value="10.000" onkeyup="formatInput(this)"></div>
@@ -90,34 +94,29 @@
             <input type="text" id="kasbon" onkeyup="formatInput(this)">
             <label style="font-size:0.7em; margin-top:5px; color:#e74c3c"><input type="checkbox" id="potongKasbon"> Potong Transfer?</label>
         </div>
-        <button style="background:#27ae60; color:white; height:45px; margin-top:20px" onclick="simpanData()">SIMPAN DATA</button>
-    </div>
-
-    <div class="search-bar">
-        <input type="text" id="cariNama" placeholder="🔍 Cari Nama..." onkeyup="muatTabel()">
-        <input type="date" id="fTglAwal" onchange="muatTabel()">
-        <input type="date" id="fTglAkhir" onchange="muatTabel()">
+        <button style="background:#27ae60; color:white; height:48px; margin-top:20px; font-size:1em;" onclick="simpanData()">SIMPAN DATA</button>
     </div>
 
     <div class="table-container">
         <table>
             <thead>
                 <tr>
-                    <th rowspan="2">NAMA</th>
+                    <th rowspan="2">NAMA PEKERJA</th>
                     <th rowspan="2">TANGGAL</th>
-                    <th colspan="4" class="bg-earning">EARNING</th>
-                    <th colspan="2" style="background:#34495e; color:white">BAGI HASIL 50/50</th>
-                    <th rowspan="2">GUARD DE+DD</th> <th rowspan="2">MAKAN</th>
+                    <th colspan="4" class="bg-earning">PERFORMA EARNING</th>
+                    <th colspan="2" class="bg-header-dark">BAGI HASIL (50/50)</th>
+                    <th rowspan="2">GUARD DE+DD</th>
+                    <th rowspan="2">MAKAN</th>
                     <th rowspan="2" class="bg-kasbon">KASBON</th>
                     <th rowspan="2">AKSI</th>
                 </tr>
                 <tr>
                     <th class="bg-earning">CEGEL</th>
-                    <th class="bg-earning">M</th>
+                    <th class="bg-earning">JUTA(M)</th>
                     <th class="bg-earning">RATE</th>
                     <th class="bg-earning">TOTAL RP</th>
-                    <th class="bg-transfer">TRANSFER</th>
-                    <th class="bg-tomy">TOMY</th>
+                    <th style="background:#d35400; color:white">TRANSFER</th>
+                    <th style="background:#2980b9; color:white">TOMY</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -148,16 +147,16 @@
         allData = [];
         if (!data) return;
 
-        // Pekerja (Paksa Munculkan dari data cloud)
+        // Sync Nama
         const pekData = data.daftarPekerja || {};
         const pekArr = Array.isArray(pekData) ? pekData : Object.values(pekData);
         const sel = document.getElementById('namaOrang');
         const cur = sel.value;
-        sel.innerHTML = '<option value="">-- Pilih --</option>';
+        sel.innerHTML = '<option value="">-- Pilih Nama --</option>';
         pekArr.sort().forEach(p => { if(p) sel.innerHTML += `<option value="${p}">${p}</option>`; });
         sel.value = cur;
 
-        // Transaksi
+        // Sync Transaksi
         const target = data.earningData || data;
         Object.keys(target).forEach(key => {
             const item = target[key];
@@ -168,20 +167,10 @@
 
     function muatTabel() {
         const body = document.getElementById('tableBody');
-        const cari = document.getElementById('cariNama').value.toLowerCase();
-        const tAwal = document.getElementById('fTglAwal').value;
-        const tAkhir = document.getElementById('fTglAkhir').value;
         body.innerHTML = '';
-
-        let filtered = allData.filter(i => {
-            const mNama = !cari || i.namaOrang.toLowerCase().includes(cari);
-            const mTgl = (!tAwal || i.tgl >= tAwal) && (!tAkhir || i.tgl <= tAkhir);
-            return mNama && mTgl;
-        }).sort((a,b) => new Date(b.tgl) - new Date(a.tgl));
-
         let TC=0, TK=0, TT=0, TY=0, TG=0, TKB=0, TM=0;
 
-        filtered.forEach(i => {
+        allData.sort((a,b) => new Date(b.tgl) - new Date(a.tgl)).forEach(i => {
             let kotor = ((i.cegel||0)/1000000) * (i.rate||0);
             let bagiDua = (kotor - (i.guardian||0)) / 2;
             let nMakan = i.makan || 0;
@@ -191,14 +180,19 @@
             TC += (i.cegel||0); TK += kotor; TT += hTrans; TY += hTomy; TG += (i.guardian||0); TKB += (i.kasbon||0); TM += nMakan;
 
             body.innerHTML += `<tr>
-                <td style="text-align:left"><b>${i.namaOrang}</b></td><td>${i.tgl}</td>
-                <td>${(i.cegel||0).toLocaleString()}</td><td>${((i.cegel||0)/1000000).toFixed(1)}M</td>
-                <td>${(i.rate||0).toLocaleString()}</td><td>${Math.round(kotor).toLocaleString()}</td>
-                <td style="font-weight:bold">${Math.round(hTrans).toLocaleString()}</td>
-                <td style="font-weight:bold">${Math.round(hTomy).toLocaleString()}</td>
-                <td>${(i.guardian||0).toLocaleString()}</td><td>${nMakan.toLocaleString()}</td>
-                <td style="color:red; font-weight:bold">${(i.kasbon||0).toLocaleString()}</td>
-                <td><button onclick="hapusData('${i.id}')">✕</button></td></tr>`;
+                <td style="text-align:left" class="txt-bold">${i.namaOrang}</td>
+                <td>${i.tgl}</td>
+                <td>${(i.cegel||0).toLocaleString()}</td>
+                <td>${((i.cegel||0)/1000000).toFixed(1)}M</td>
+                <td>${(i.rate||0).toLocaleString()}</td>
+                <td class="txt-bold">${Math.round(kotor).toLocaleString()}</td>
+                <td class="txt-transfer">${Math.round(hTrans).toLocaleString()}</td>
+                <td class="txt-tomy">${Math.round(hTomy).toLocaleString()}</td>
+                <td>${(i.guardian||0).toLocaleString()}</td>
+                <td>${nMakan.toLocaleString()}</td>
+                <td class="txt-kasbon">${(i.kasbon||0).toLocaleString()}</td>
+                <td><button onclick="hapusData('${i.id}')" style="background:rgba(200,200,200,0.2); color:inherit; border-radius:4px;">✕</button></td>
+            </tr>`;
         });
         
         document.getElementById('footerTotal').innerHTML = `<td colspan="2">TOTAL</td><td>${TC.toLocaleString()}</td><td>${(TC/1000000).toFixed(1)}M</td><td>-</td><td>${Math.round(TK).toLocaleString()}</td><td>${Math.round(TT).toLocaleString()}</td><td>${Math.round(TY).toLocaleString()}</td><td>${TG.toLocaleString()}</td><td>${TM.toLocaleString()}</td><td>${TKB.toLocaleString()}</td><td></td>`;
@@ -219,8 +213,7 @@
         });
         bersih();
     }
-
-    function hapusData(id) { if(confirm("Hapus?")) db.ref('earningData/'+id).remove(); }
+    function hapusData(id) { if(confirm("Hapus baris ini?")) db.ref('earningData/'+id).remove(); }
     function parseRaw(s) { return parseFloat(s.toString().replace(/\./g, '').replace(',', '.')) || 0; }
     function formatInput(obj) { 
         let v = obj.value.replace(/[^,\d]/g, ''); let s = v.split(','); let si = s[0].length % 3;
@@ -230,17 +223,16 @@
     }
     function updateDash(k, t, kb) { 
         document.getElementById('summaryStats').innerHTML = `
-        <div class="stat-card" style="background:#27ae60"><div>Kotor</div><div>Rp ${Math.round(k).toLocaleString()}</div></div>
-        <div class="stat-card" style="background:#d35400"><div>Transfer</div><div>Rp ${Math.round(t).toLocaleString()}</div></div>
-        <div class="stat-card" style="background:#c0392b"><div>Kasbon</div><div>Rp ${Math.round(kb).toLocaleString()}</div></div>`;
+        <div class="stat-card" style="background:#27ae60"><div>KOTOR</div><div style="font-size:1.6em">Rp ${Math.round(k).toLocaleString()}</div></div>
+        <div class="stat-card" style="background:#e67e22"><div>TRANSFER</div><div style="font-size:1.6em">Rp ${Math.round(t).toLocaleString()}</div></div>
+        <div class="stat-card" style="background:#c0392b"><div>KASBON</div><div style="font-size:1.6em">Rp ${Math.round(kb).toLocaleString()}</div></div>`;
     }
     function bersih() { ["cegel","rate","guardian","kasbon"].forEach(id=>document.getElementById(id).value=''); document.getElementById('tgl').value = new Date().toISOString().split('T')[0]; document.getElementById('makan').value="10.000"; }
     function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
-    function tambahPekerja() { const n = prompt("Nama:"); if(n) { db.ref('daftarPekerja').push(n); } }
-    function hapusPekerja() { const n = document.getElementById('namaOrang').value; if(n && confirm("Hapus?")) { db.ref('daftarPekerja').once('value').then(s => { s.forEach(c => { if(c.val() === n) c.ref.remove(); }); }); } }
+    function tambahPekerja() { const n = prompt("Nama:"); if(n) db.ref('daftarPekerja').push(n); }
+    function hapusPekerja() { const n = document.getElementById('namaOrang').value; if(n && confirm("Hapus nama ini?")) { db.ref('daftarPekerja').once('value').then(s => { s.forEach(c => { if(c.val() === n) c.ref.remove(); }); }); } }
     function exportData() { db.ref('/').once('value').then(snap => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(snap.val(),null,2)],{type:'application/json'})); a.download='Backup.json'; a.click(); }); }
     function importData(inp) { const file = inp.files[0]; if(!file) return; const r = new FileReader(); r.onload=(e)=>{ db.ref('/').set(JSON.parse(e.target.result)).then(()=>alert("Berhasil!")); }; r.readAsText(file); }
-    
     document.getElementById('tgl').value = new Date().toISOString().split('T')[0];
 </script>
 </body>
