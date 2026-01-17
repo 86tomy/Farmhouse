@@ -34,6 +34,15 @@
         .txt-kasbon { color: #e74c3c !important; font-weight: bold; }    
         .txt-makan { color: #27ae60 !important; font-weight: bold; } 
         button { cursor: pointer; border-radius: 8px; font-weight: bold; border: none; padding: 10px 15px; transition: 0.2s; }
+        
+        /* Akun Game Menu Styles */
+        .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); }
+        .modal-content { background: var(--card); margin: 2% auto; padding: 20px; border-radius: 15px; width: 95%; max-width: 1200px; color: var(--text); box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .acc-table { min-width: 100% !important; }
+        .acc-table input, .acc-table select { width: 95%; padding: 6px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.85em; }
+        .badge-available { background: #27ae60; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.8em; font-weight: bold; }
+        .badge-owned { background: #e67e22; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.8em; font-weight: bold; }
+        
         #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display:flex; justify-content:center; align-items:center; z-index:9999; }
     </style>
 </head>
@@ -47,6 +56,34 @@
     </div>
 </div>
 
+<div id="accountModal" class="modal">
+    <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
+            <h2 style="margin:0; color:var(--primary)">🔑 Pengaturan Akun Game</h2>
+            <div style="display:flex; gap:10px;">
+                <button onclick="tambahAkunBaru()" style="background:#3498db; color:white;">+ TAMBAH KARAKTER</button>
+                <button onclick="toggleAccountModal()" style="background:#e74c3c; color:white;">✕</button>
+            </div>
+        </div>
+        <div class="table-container" style="max-height: 65vh; overflow-y: auto; border: 1px solid var(--border);">
+            <table class="acc-table">
+                <thead>
+                    <tr style="background: var(--primary); color: white;">
+                        <th>STATUS</th>
+                        <th>NAMA KARAKTER</th>
+                        <th>USERNAME</th>
+                        <th>PASSWORD</th>
+                        <th>DIGUNAKAN OLEH (PEKERJA)</th>
+                        <th>AKSI</th>
+                    </tr>
+                </thead>
+                <tbody id="accountTableBody"></tbody>
+            </table>
+        </div>
+        <div style="margin-top: 15px; text-align: right; color: #888; font-size: 0.8em;">*Perubahan pada tabel ini otomatis tersimpan ke cloud.</div>
+    </div>
+</div>
+
 <div class="container">
     <div class="header-app">
         <div>
@@ -54,6 +91,7 @@
             <div id="syncStatus" class="sync-info">📍 Menghubungkan...</div>
         </div>
         <div style="display:flex; gap:10px">
+            <button style="background:#9b59b6; color:white" onclick="openAccountWithPassword()">🔑 Akun Game</button>
             <button style="background:#2c3e50; color:white" onclick="toggleDarkMode()">🌙 Mode</button>
             <button style="background:#3498db; color:white" onclick="exportData()">💾 Backup</button>
             <button style="background:#2ecc71; color:white" onclick="document.getElementById('importFile').click()">📂 Restore</button>
@@ -150,11 +188,78 @@
 
     function logout() { localStorage.removeItem("isLoggedIn"); location.reload(); }
 
-    // REALTIME MONITORING
+    // Account Logic with Security
+    function openAccountWithPassword() {
+        const pass = prompt("Masukkan Password Akses Akun Game:");
+        if (pass === "54321") {
+            toggleAccountModal();
+        } else if (pass !== null) {
+            alert("Password Salah! Akses Ditolak.");
+        }
+    }
+
+    function toggleAccountModal() {
+        const modal = document.getElementById('accountModal');
+        modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
+        if(modal.style.display === 'block') muatDataAkun();
+    }
+
+    function tambahAkunBaru() {
+        const charName = prompt("Masukkan Nama Karakter:");
+        if(!charName) return;
+        db.ref('dataAkun').push({
+            char: charName,
+            user: '',
+            pass: '',
+            pekerja: ''
+        });
+    }
+
+    function updateField(id, field, value) {
+        db.ref('dataAkun/' + id).update({ [field]: value });
+    }
+
+    function hapusAkun(id) {
+        if(confirm("Hapus data karakter ini?")) db.ref('dataAkun/' + id).remove();
+    }
+
+    function muatDataAkun() {
+        const tbody = document.getElementById('accountTableBody');
+        tbody.innerHTML = '';
+        const akun = localDB.dataAkun || {};
+        const daftarPekerja = localDB.daftarPekerja || {};
+
+        let workerOptions = '<option value="">-- Belum Dipakai --</option>';
+        Object.values(daftarPekerja).sort().forEach(p => {
+            workerOptions += `<option value="${p}">${p}</option>`;
+        });
+
+        Object.keys(akun).forEach(key => {
+            const d = akun[key];
+            const isAvailable = !d.pekerja;
+            const statusBadge = isAvailable 
+                ? '<span class="badge-available">Tersedia</span>' 
+                : '<span class="badge-owned">Digunakan</span>';
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${statusBadge}</td>
+                    <td><input type="text" value="${d.char || ''}" onchange="updateField('${key}', 'char', this.value)"></td>
+                    <td><input type="text" value="${d.user || ''}" onchange="updateField('${key}', 'user', this.value)"></td>
+                    <td><input type="text" value="${d.pass || ''}" onchange="updateField('${key}', 'pass', this.value)"></td>
+                    <td>
+                        <select onchange="updateField('${key}', 'pekerja', this.value)">
+                            ${workerOptions.replace(`value="${d.pekerja}"`, `value="${d.pekerja}" selected`)}
+                        </select>
+                    </td>
+                    <td><button onclick="hapusAkun('${key}')" style="background:#eee; color:#c0392b;">✕</button></td>
+                </tr>`;
+        });
+    }
+
+    // Database Listeners
     db.ref('/').on('value', (snap) => {
         localDB = snap.val() || {};
-        
-        // Render Dropdown Pekerja
         const sel = document.getElementById('namaOrang');
         const cur = sel.value;
         sel.innerHTML = '<option value="">-- Pilih Nama --</option>';
@@ -164,8 +269,8 @@
             });
         }
         sel.value = cur;
-
         muatTabel();
+        if(document.getElementById('accountModal').style.display === 'block') muatDataAkun();
     });
 
     function muatTabel() {
@@ -175,16 +280,13 @@
         const tAkhir = document.getElementById('fTglAkhir').value;
         
         let list = [];
-        // GABUNGKAN DATA: Ambil dari earningData ATAU dari root jika format lama
         const source = localDB.earningData || {};
         
-        // Cek juga di root (jika ada data nyasar di luar earningData)
         Object.keys(localDB).forEach(key => {
-            if(key !== 'earningData' && key !== 'daftarPekerja' && localDB[key].namaOrang) {
+            if(key !== 'earningData' && key !== 'daftarPekerja' && key !== 'dataAkun' && localDB[key].namaOrang) {
                 list.push({ id: key, isRoot: true, ...localDB[key] });
             }
         });
-        // Tambahkan dari earningData
         Object.keys(source).forEach(key => {
             list.push({ id: key, isRoot: false, ...source[key] });
         });
@@ -204,9 +306,7 @@
             let nMakan = i.makan || 0;
             let hTomy = bagiDua - nMakan;
             let hTrans = i.isPotong ? ((bagiDua + nMakan) - (i.kasbon||0)) : (bagiDua + nMakan);
-
             TC += (i.cegel||0); TK += kotor; TT += hTrans; TY += hTomy; TG += (i.guardian||0); TKB += (i.kasbon||0); TM += nMakan;
-
             body.innerHTML += `<tr>
                 <td>${i.namaOrang}</td><td>${i.tgl}</td>
                 <td>${(i.cegel||0).toLocaleString()}</td>
@@ -221,7 +321,6 @@
                 <td><button onclick="hapusData('${i.id}', ${i.isRoot})" style="background:#eee; color:#333;">✕</button></td>
             </tr>`;
         });
-        
         document.getElementById('footerTotal').innerHTML = `<td colspan="2">TOTAL</td><td>${TC.toLocaleString()}</td><td>${(TC/1000000).toFixed(1)}M</td><td>-</td><td>${Math.round(TK).toLocaleString()}</td><td>${Math.round(TT).toLocaleString()}</td><td>${Math.round(TY).toLocaleString()}</td><td>${TG.toLocaleString()}</td><td>${TM.toLocaleString()}</td><td>${TKB.toLocaleString()}</td><td></td>`;
         updateDash(TK, TT, TKB);
         document.getElementById('syncStatus').innerHTML = `📍 Sync: ${list.length} Data`;
@@ -242,7 +341,6 @@
         db.ref('earningData').push(obj).then(() => { bersih(); resetFilter(); });
     }
 
-    // FUNGSI RESTORE TERBARU DENGAN AUTO-CONVERTER
     function importData(inp) {
         const file = inp.files[0];
         if(!file) return;
@@ -250,28 +348,15 @@
         reader.onload = (e) => {
             try {
                 let data = JSON.parse(e.target.result);
-                let fixedData = { daftarPekerja: data.daftarPekerja || {}, earningData: {} };
-
-                // LOGIKA AUTO-CONVERTER:
-                // Jika data berbentuk format lama (langsung list di root), masukkan ke earningData
+                let fixedData = { daftarPekerja: data.daftarPekerja || {}, earningData: {}, dataAkun: data.dataAkun || {} };
                 Object.keys(data).forEach(key => {
-                    if(key !== 'daftarPekerja' && key !== 'earningData') {
-                        if(data[key].namaOrang) {
-                            fixedData.earningData[key] = data[key];
-                        }
+                    if(key !== 'daftarPekerja' && key !== 'earningData' && key !== 'dataAkun' && data[key].namaOrang) {
+                        fixedData.earningData[key] = data[key];
                     }
                 });
-
-                // Jika sudah ada earningData di file backup, gabungkan
-                if(data.earningData) {
-                    fixedData.earningData = {...fixedData.earningData, ...data.earningData};
-                }
-
-                if(confirm("Restore data sekarang? Seluruh data cloud akan diganti.")) {
-                    db.ref('/').set(fixedData).then(() => {
-                        alert("Berhasil! Data telah dikonversi ke format baru.");
-                        location.reload();
-                    });
+                if(data.earningData) fixedData.earningData = {...fixedData.earningData, ...data.earningData};
+                if(confirm("Restore data sekarang?")) {
+                    db.ref('/').set(fixedData).then(() => { alert("Berhasil!"); location.reload(); });
                 }
             } catch(err) { alert("File rusak!"); }
         };
