@@ -35,7 +35,6 @@
         .txt-makan { color: #27ae60 !important; font-weight: bold; } 
         button { cursor: pointer; border-radius: 8px; font-weight: bold; border: none; padding: 10px 15px; transition: 0.2s; }
         
-        /* Akun Game Menu Styles */
         .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); }
         .modal-content { background: var(--card); margin: 2% auto; padding: 20px; border-radius: 15px; width: 95%; max-width: 1200px; color: var(--text); box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
         .acc-table { min-width: 100% !important; }
@@ -44,6 +43,8 @@
         .badge-owned { background: #e67e22; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.8em; font-weight: bold; }
         
         #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display:flex; justify-content:center; align-items:center; z-index:9999; }
+        .btn-edit { background: #f1c40f; color: #333; margin-right: 5px; }
+        .btn-delete { background: #eee; color: #333; }
     </style>
 </head>
 <body class="dark-mode">
@@ -80,7 +81,6 @@
                 <tbody id="accountTableBody"></tbody>
             </table>
         </div>
-        <div style="margin-top: 15px; text-align: right; color: #888; font-size: 0.8em;">*Perubahan pada tabel ini otomatis tersimpan ke cloud.</div>
     </div>
 </div>
 
@@ -103,6 +103,9 @@
     <div id="summaryStats" class="stats-grid"></div>
 
     <div class="input-section">
+        <input type="hidden" id="editId">
+        <input type="hidden" id="editIsRoot">
+
         <div class="input-group" style="grid-column: span 2;">
             <label>NAMA PEKERJA</label>
             <div style="display: flex; gap: 5px;">
@@ -119,9 +122,11 @@
         <div class="input-group">
             <label>KASBON</label>
             <input type="text" id="kasbon" onkeyup="formatInput(this)">
-            <label style="font-size:0.7em; margin-top:5px; color:#e74c3c"><input type="checkbox" id="potongKasbon"> Potong Transfer?</label>
         </div>
-        <button style="background:#27ae60; color:white; height:48px; margin-top:20px" onclick="simpanData()">SIMPAN DATA</button>
+        <div style="display: flex; gap: 5px; margin-top: 20px;">
+            <button id="btnSimpan" style="background:#27ae60; color:white; height:48px; flex: 2;" onclick="simpanData()">SIMPAN DATA</button>
+            <button id="btnBatalEdit" style="background:#7f8c8d; color:white; height:48px; flex: 1; display: none;" onclick="bersih()">BATAL</button>
+        </div>
     </div>
 
     <div class="search-bar">
@@ -188,14 +193,10 @@
 
     function logout() { localStorage.removeItem("isLoggedIn"); location.reload(); }
 
-    // Account Logic with Security
     function openAccountWithPassword() {
         const pass = prompt("Masukkan Password Akses Akun Game:");
-        if (pass === "54321") {
-            toggleAccountModal();
-        } else if (pass !== null) {
-            alert("Password Salah! Akses Ditolak.");
-        }
+        if (pass === "54321") { toggleAccountModal(); } 
+        else if (pass !== null) { alert("Password Salah! Akses Ditolak."); }
     }
 
     function toggleAccountModal() {
@@ -207,67 +208,41 @@
     function tambahAkunBaru() {
         const charName = prompt("Masukkan Nama Karakter:");
         if(!charName) return;
-        db.ref('dataAkun').push({
-            char: charName,
-            user: '',
-            pass: '',
-            pekerja: ''
-        });
+        db.ref('dataAkun').push({ char: charName, user: '', pass: '', pekerja: '' });
     }
 
-    function updateField(id, field, value) {
-        db.ref('dataAkun/' + id).update({ [field]: value });
-    }
-
-    function hapusAkun(id) {
-        if(confirm("Hapus data karakter ini?")) db.ref('dataAkun/' + id).remove();
-    }
+    function updateField(id, field, value) { db.ref('dataAkun/' + id).update({ [field]: value }); }
+    function hapusAkun(id) { if(confirm("Hapus data karakter ini?")) db.ref('dataAkun/' + id).remove(); }
 
     function muatDataAkun() {
         const tbody = document.getElementById('accountTableBody');
         tbody.innerHTML = '';
         const akun = localDB.dataAkun || {};
         const daftarPekerja = localDB.daftarPekerja || {};
-
         let workerOptions = '<option value="">-- Belum Dipakai --</option>';
-        Object.values(daftarPekerja).sort().forEach(p => {
-            workerOptions += `<option value="${p}">${p}</option>`;
-        });
+        Object.values(daftarPekerja).sort().forEach(p => { workerOptions += `<option value="${p}">${p}</option>`; });
 
         Object.keys(akun).forEach(key => {
             const d = akun[key];
             const isAvailable = !d.pekerja;
-            const statusBadge = isAvailable 
-                ? '<span class="badge-available">Tersedia</span>' 
-                : '<span class="badge-owned">Digunakan</span>';
-
-            tbody.innerHTML += `
-                <tr>
-                    <td>${statusBadge}</td>
-                    <td><input type="text" value="${d.char || ''}" onchange="updateField('${key}', 'char', this.value)"></td>
-                    <td><input type="text" value="${d.user || ''}" onchange="updateField('${key}', 'user', this.value)"></td>
-                    <td><input type="text" value="${d.pass || ''}" onchange="updateField('${key}', 'pass', this.value)"></td>
-                    <td>
-                        <select onchange="updateField('${key}', 'pekerja', this.value)">
-                            ${workerOptions.replace(`value="${d.pekerja}"`, `value="${d.pekerja}" selected`)}
-                        </select>
-                    </td>
-                    <td><button onclick="hapusAkun('${key}')" style="background:#eee; color:#c0392b;">✕</button></td>
-                </tr>`;
+            const statusBadge = isAvailable ? '<span class="badge-available">Tersedia</span>' : '<span class="badge-owned">Digunakan</span>';
+            tbody.innerHTML += `<tr>
+                <td>${statusBadge}</td>
+                <td><input type="text" value="${d.char || ''}" onchange="updateField('${key}', 'char', this.value)"></td>
+                <td><input type="text" value="${d.user || ''}" onchange="updateField('${key}', 'user', this.value)"></td>
+                <td><input type="text" value="${d.pass || ''}" onchange="updateField('${key}', 'pass', this.value)"></td>
+                <td><select onchange="updateField('${key}', 'pekerja', this.value)">${workerOptions.replace(`value="${d.pekerja}"`, `value="${d.pekerja}" selected`)}</select></td>
+                <td><button onclick="hapusAkun('${key}')" style="background:#eee; color:#c0392b;">✕</button></td>
+            </tr>`;
         });
     }
 
-    // Database Listeners
     db.ref('/').on('value', (snap) => {
         localDB = snap.val() || {};
         const sel = document.getElementById('namaOrang');
         const cur = sel.value;
         sel.innerHTML = '<option value="">-- Pilih Nama --</option>';
-        if(localDB.daftarPekerja) {
-            Object.values(localDB.daftarPekerja).sort().forEach(p => {
-                sel.innerHTML += `<option value="${p}">${p}</option>`;
-            });
-        }
+        if(localDB.daftarPekerja) { Object.values(localDB.daftarPekerja).sort().forEach(p => { sel.innerHTML += `<option value="${p}">${p}</option>`; }); }
         sel.value = cur;
         muatTabel();
         if(document.getElementById('accountModal').style.display === 'block') muatDataAkun();
@@ -278,18 +253,10 @@
         const cari = document.getElementById('cariNama').value.toLowerCase();
         const tAwal = document.getElementById('fTglAwal').value;
         const tAkhir = document.getElementById('fTglAkhir').value;
-        
         let list = [];
         const source = localDB.earningData || {};
-        
-        Object.keys(localDB).forEach(key => {
-            if(key !== 'earningData' && key !== 'daftarPekerja' && key !== 'dataAkun' && localDB[key].namaOrang) {
-                list.push({ id: key, isRoot: true, ...localDB[key] });
-            }
-        });
-        Object.keys(source).forEach(key => {
-            list.push({ id: key, isRoot: false, ...source[key] });
-        });
+        Object.keys(localDB).forEach(key => { if(key !== 'earningData' && key !== 'daftarPekerja' && key !== 'dataAkun' && localDB[key].namaOrang) list.push({ id: key, isRoot: true, ...localDB[key] }); });
+        Object.keys(source).forEach(key => { list.push({ id: key, isRoot: false, ...source[key] }); });
 
         let filtered = list.filter(i => {
             const mN = !cari || i.namaOrang.toLowerCase().includes(cari);
@@ -305,8 +272,13 @@
             let bagiDua = (kotor - (i.guardian||0)) / 2;
             let nMakan = i.makan || 0;
             let hTomy = bagiDua - nMakan;
-            let hTrans = i.isPotong ? ((bagiDua + nMakan) - (i.kasbon||0)) : (bagiDua + nMakan);
+            let hTrans = (bagiDua + nMakan) - (i.kasbon || 0);
+            
             TC += (i.cegel||0); TK += kotor; TT += hTrans; TY += hTomy; TG += (i.guardian||0); TKB += (i.kasbon||0); TM += nMakan;
+            
+            // Konversi data ke string JSON untuk mempermudah passing ke fungsi edit
+            const dataString = JSON.stringify(i).replace(/"/g, '&quot;');
+
             body.innerHTML += `<tr>
                 <td>${i.namaOrang}</td><td>${i.tgl}</td>
                 <td>${(i.cegel||0).toLocaleString()}</td>
@@ -318,7 +290,10 @@
                 <td>${(i.guardian||0).toLocaleString()}</td>
                 <td class="txt-makan">${nMakan.toLocaleString()}</td>
                 <td class="txt-kasbon">${(i.kasbon||0).toLocaleString()}</td>
-                <td><button onclick="hapusData('${i.id}', ${i.isRoot})" style="background:#eee; color:#333;">✕</button></td>
+                <td>
+                    <button onclick="editData('${dataString}')" class="btn-edit">✎</button>
+                    <button onclick="hapusData('${i.id}', ${i.isRoot})" class="btn-delete">✕</button>
+                </td>
             </tr>`;
         });
         document.getElementById('footerTotal').innerHTML = `<td colspan="2">TOTAL</td><td>${TC.toLocaleString()}</td><td>${(TC/1000000).toFixed(1)}M</td><td>-</td><td>${Math.round(TK).toLocaleString()}</td><td>${Math.round(TT).toLocaleString()}</td><td>${Math.round(TY).toLocaleString()}</td><td>${TG.toLocaleString()}</td><td>${TM.toLocaleString()}</td><td>${TKB.toLocaleString()}</td><td></td>`;
@@ -326,19 +301,55 @@
         document.getElementById('syncStatus').innerHTML = `📍 Sync: ${list.length} Data`;
     }
 
+    function editData(json) {
+        const data = JSON.parse(json);
+        document.getElementById('editId').value = data.id;
+        document.getElementById('editIsRoot').value = data.isRoot;
+        document.getElementById('namaOrang').value = data.namaOrang;
+        document.getElementById('tgl').value = data.tgl;
+        document.getElementById('cegel').value = data.cegel.toLocaleString();
+        document.getElementById('rate').value = data.rate.toLocaleString();
+        document.getElementById('guardian').value = data.guardian.toLocaleString();
+        document.getElementById('makan').value = data.makan.toLocaleString();
+        document.getElementById('kasbon').value = data.kasbon.toLocaleString();
+        
+        document.getElementById('btnSimpan').innerHTML = "UPDATE DATA";
+        document.getElementById('btnSimpan').style.background = "#3498db";
+        document.getElementById('btnBatalEdit').style.display = "block";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     function simpanData() {
         const n = document.getElementById('namaOrang').value;
+        const idEdit = document.getElementById('editId').value;
+        const isRoot = document.getElementById('editIsRoot').value === "true";
         if(!n) return alert("Pilih Nama!");
+        
         const obj = {
             namaOrang: n, tgl: document.getElementById('tgl').value,
             cegel: parseRaw(document.getElementById('cegel').value),
             rate: parseRaw(document.getElementById('rate').value),
             guardian: parseRaw(document.getElementById('guardian').value),
             makan: parseRaw(document.getElementById('makan').value),
-            kasbon: parseRaw(document.getElementById('kasbon').value),
-            isPotong: document.getElementById('potongKasbon').checked
+            kasbon: parseRaw(document.getElementById('kasbon').value)
         };
-        db.ref('earningData').push(obj).then(() => { bersih(); resetFilter(); });
+
+        if(idEdit) {
+            // Update Data
+            const path = isRoot ? idEdit : 'earningData/' + idEdit;
+            db.ref(path).update(obj).then(() => { bersih(); });
+        } else {
+            // Simpan Baru
+            db.ref('earningData').push(obj).then(() => { bersih(); resetFilter(); });
+        }
+    }
+
+    function bersih() {
+        ["cegel","rate","guardian","kasbon","editId","editIsRoot"].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('makan').value = "10.000";
+        document.getElementById('btnSimpan').innerHTML = "SIMPAN DATA";
+        document.getElementById('btnSimpan').style.background = "#27ae60";
+        document.getElementById('btnBatalEdit').style.display = "none";
     }
 
     function importData(inp) {
@@ -349,15 +360,9 @@
             try {
                 let data = JSON.parse(e.target.result);
                 let fixedData = { daftarPekerja: data.daftarPekerja || {}, earningData: {}, dataAkun: data.dataAkun || {} };
-                Object.keys(data).forEach(key => {
-                    if(key !== 'daftarPekerja' && key !== 'earningData' && key !== 'dataAkun' && data[key].namaOrang) {
-                        fixedData.earningData[key] = data[key];
-                    }
-                });
+                Object.keys(data).forEach(key => { if(key !== 'daftarPekerja' && key !== 'earningData' && key !== 'dataAkun' && data[key].namaOrang) fixedData.earningData[key] = data[key]; });
                 if(data.earningData) fixedData.earningData = {...fixedData.earningData, ...data.earningData};
-                if(confirm("Restore data sekarang?")) {
-                    db.ref('/').set(fixedData).then(() => { alert("Berhasil!"); location.reload(); });
-                }
+                if(confirm("Restore data sekarang?")) db.ref('/').set(fixedData).then(() => { alert("Berhasil!"); location.reload(); });
             } catch(err) { alert("File rusak!"); }
         };
         reader.readAsText(file);
@@ -370,13 +375,7 @@
         muatTabel();
     }
 
-    function hapusData(id, isRoot) {
-        if(confirm("Hapus?")) {
-            const path = isRoot ? id : 'earningData/' + id;
-            db.ref(path).remove();
-        }
-    }
-
+    function hapusData(id, isRoot) { if(confirm("Hapus?")) { const path = isRoot ? id : 'earningData/' + id; db.ref(path).remove(); } }
     function parseRaw(s) { return parseFloat(s.toString().replace(/\./g, '').replace(',', '.')) || 0; }
     function formatInput(obj) { 
         let v = obj.value.replace(/[^,\d]/g, ''); let s = v.split(','); let si = s[0].length % 3;
@@ -389,10 +388,6 @@
         <div class="stat-card" style="background:#27ae60"><div>KOTOR</div><div style="font-size:1.6em">Rp ${Math.round(k).toLocaleString()}</div></div>
         <div class="stat-card" style="background:#e67e22"><div>TRANSFER</div><div style="font-size:1.6em">Rp ${Math.round(t).toLocaleString()}</div></div>
         <div class="stat-card" style="background:#c0392b"><div>KASBON</div><div style="font-size:1.6em">Rp ${Math.round(kb).toLocaleString()}</div></div>`;
-    }
-    function bersih() { 
-        ["cegel","rate","guardian","kasbon"].forEach(id => document.getElementById(id).value = '');
-        document.getElementById('makan').value = "10.000";
     }
     function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
     function tambahPekerja() { const n = prompt("Nama:"); if(n) db.ref('daftarPekerja').push(n); }
