@@ -10,41 +10,48 @@
         :root { --primary: #27ae60; --bg: #f8f9fa; --card: #ffffff; --text: #333; --border: #ddd; --zebra: #f2f2f2; }
         body.dark-mode { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --border: #333; --zebra: #252525; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 20px; background: var(--bg); color: var(--text); transition: 0.3s; }
-        .container { max-width: 1550px; margin: auto; }
+        .container { max-width: 1600px; margin: auto; }
+        
         .header-app { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .sync-info { font-size: 0.85em; margin-top: 5px; color: white; background: #2c3e50; padding: 5px 12px; border-radius: 20px; display: inline-block; font-weight: bold; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .stat-card { padding: 20px; border-radius: 12px; color: white; font-weight: bold; }
-        .input-section { background: var(--card); padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; border-top: 6px solid var(--primary); }
-        .search-bar { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
-        .search-bar input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); }
-        .input-group { display: flex; flex-direction: column; }
-        .input-group label { font-size: 0.8em; font-weight: bold; margin-bottom: 5px; color: var(--primary); }
-        input, select { padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); outline: none; }
-        .table-container { overflow-x: auto; background: var(--card); border-radius: 12px; }
-        table { width: 100%; border-collapse: collapse; min-width: 1350px; font-size: 0.95em; }
-        th, td { border: 1px solid var(--border); padding: 10px 8px; text-align: center; }
+        
+        .input-section { background: var(--card); padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; border-top: 6px solid var(--primary); }
+        .filter-container { background: var(--card); padding: 15px 20px; border-radius: 12px 12px 0 0; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; border-bottom: 1px solid var(--border); }
+        .input-group label { font-size: 0.7em; font-weight: bold; margin-bottom: 5px; color: var(--primary); text-transform: uppercase; display: block; }
+        
+        input, select { padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--text); outline: none; width: 100%; box-sizing: border-box; }
+        body.dark-mode select option { background: #1e1e1e; color: #e0e0e0; }
+        
+        .table-container { overflow-x: auto; background: var(--card); border-radius: 0 0 12px 12px; }
+        table { width: 100%; border-collapse: collapse; min-width: 1300px; font-size: 0.85em; }
+        th, td { border: 1px solid var(--border); padding: 8px 5px; text-align: center; }
+        th { background: #f2f2f2; color: #333; font-weight: bold; font-size: 0.7em; text-transform: uppercase; }
         tbody tr:nth-child(even) { background-color: var(--zebra); }
-        th { background: #f2f2f2; color: #333; font-weight: bold; font-size: 0.75em; text-transform: uppercase; }
+        
+        .td-edit input, .td-edit select { border: none; background: transparent; text-align: center; color: inherit; font-size: 1.05em; }
+        .td-edit input:focus, .td-edit select:focus { background: #ffffff !important; color: #000000 !important; outline: 2px solid var(--primary); border-radius: 4px; }
+
         .bg-earning { background: #27ae60 !important; color: white !important; }
-        .bg-header-dark { background: #34495e !important; color: white !important; }
-        .row-total { background: #2c3e50 !important; color: white !important; font-weight: bold; }
-        .txt-transfer { color: #e67e22 !important; font-weight: bold; } 
-        .txt-tomy { color: #3498db !important; font-weight: bold; }     
-        .txt-kasbon { color: #e74c3c !important; font-weight: bold; }    
-        .txt-makan { color: #27ae60 !important; font-weight: bold; } 
-        button { cursor: pointer; border-radius: 8px; font-weight: bold; border: none; padding: 10px 15px; transition: 0.2s; }
-        
-        .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); }
-        .modal-content { background: var(--card); margin: 2% auto; padding: 20px; border-radius: 15px; width: 95%; max-width: 1200px; color: var(--text); box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
-        .acc-table { min-width: 100% !important; }
-        .acc-table input, .acc-table select { width: 95%; padding: 6px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.85em; }
-        .badge-available { background: #27ae60; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.8em; font-weight: bold; }
-        .badge-owned { background: #e67e22; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.8em; font-weight: bold; }
-        
+        .txt-transfer { color: #e67e22 !important; font-weight: 900; } 
+        .txt-tomy { color: #3498db !important; font-weight: 900; }     
+        .txt-kasbon { color: #e74c3c !important; font-weight: 900; }
+        .row-pinjam { color: #ff4d4d !important; font-weight: bold; }
+        .row-bayar { color: #2ecc71 !important; font-weight: bold; }
+
+        .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .dot-green { background-color: #2ecc71; box-shadow: 0 0 5px #2ecc71; }
+        .dot-red { background-color: #e74c3c; box-shadow: 0 0 5px #e74c3c; }
+
+        .vcard-scroll { display: flex; overflow-x: auto; padding-bottom: 10px; gap: 12px; }
+        .vcard-user { background: linear-gradient(135deg, #2c3e50, #34495e); color: white; padding: 12px; border-radius: 12px; min-width: 160px; border-left: 5px solid #e74c3c; flex-shrink: 0; }
+        .vcard-user .amt { color: #ffff00; font-weight: 800; font-size: 1.1em; }
+
+        .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); }
+        .modal-content { background: var(--card); margin: 1% auto; padding: 25px; border-radius: 15px; width: 95%; max-width: 1500px; color: var(--text); max-height: 96vh; overflow-y: auto; }
         #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display:flex; justify-content:center; align-items:center; z-index:9999; }
-        .btn-edit { background: #f1c40f; color: #333; margin-right: 5px; }
-        .btn-delete { background: #eee; color: #333; }
+        button { cursor: pointer; border-radius: 8px; font-weight: bold; border: none; padding: 10px 15px; }
     </style>
 </head>
 <body class="dark-mode">
@@ -52,35 +59,8 @@
 <div id="loginOverlay">
     <div style="background: white; padding: 40px; border-radius: 20px; text-align: center; width: 320px;">
         <h2 style="color:#333; margin:0 0 20px 0;">🔐 FARMHOUSE LOGIN</h2>
-        <input type="password" id="pinInput" style="text-align:center; width:100%; margin-bottom:20px; font-size:2em; border: 2px solid #ddd;">
-        <button style="background:#27ae60; color:white; width:100%; padding:15px;" onclick="checkPin()">MASUK</button>
-    </div>
-</div>
-
-<div id="accountModal" class="modal">
-    <div class="modal-content">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
-            <h2 style="margin:0; color:var(--primary)">🔑 Pengaturan Akun Game</h2>
-            <div style="display:flex; gap:10px;">
-                <button onclick="tambahAkunBaru()" style="background:#3498db; color:white;">+ TAMBAH KARAKTER</button>
-                <button onclick="toggleAccountModal()" style="background:#e74c3c; color:white;">✕</button>
-            </div>
-        </div>
-        <div class="table-container" style="max-height: 65vh; overflow-y: auto; border: 1px solid var(--border);">
-            <table class="acc-table">
-                <thead>
-                    <tr style="background: var(--primary); color: white;">
-                        <th>STATUS</th>
-                        <th>NAMA KARAKTER</th>
-                        <th>USERNAME</th>
-                        <th>PASSWORD</th>
-                        <th>DIGUNAKAN OLEH (PEKERJA)</th>
-                        <th>AKSI</th>
-                    </tr>
-                </thead>
-                <tbody id="accountTableBody"></tbody>
-            </table>
-        </div>
+        <input type="password" id="pinInput" style="text-align:center; font-size:2em; border: 2px solid #ddd;">
+        <button style="background:#27ae60; color:white; width:100%; padding:15px; margin-top:20px" onclick="checkPin()">MASUK</button>
     </div>
 </div>
 
@@ -91,11 +71,12 @@
             <div id="syncStatus" class="sync-info">📍 Menghubungkan...</div>
         </div>
         <div style="display:flex; gap:10px">
+            <button style="background:#e74c3c; color:white" onclick="bukaKasbonPrompt()">💰 Kasbon</button>
             <button style="background:#9b59b6; color:white" onclick="openAccountWithPassword()">🔑 Akun Game</button>
             <button style="background:#2c3e50; color:white" onclick="toggleDarkMode()">🌙 Mode</button>
             <button style="background:#3498db; color:white" onclick="exportData()">💾 Backup</button>
-            <button style="background:#2ecc71; color:white" onclick="document.getElementById('importFile').click()">📂 Restore</button>
-            <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(this)">
+            <button style="background:#f39c12; color:white" onclick="document.getElementById('fileRestore').click()">📂 Restore</button>
+            <input type="file" id="fileRestore" style="display:none" onchange="importData(this)" accept=".json">
             <button style="background:#7f8c8d; color:white" onclick="logout()">🔒 Keluar</button>
         </div>
     </div>
@@ -103,64 +84,79 @@
     <div id="summaryStats" class="stats-grid"></div>
 
     <div class="input-section">
-        <input type="hidden" id="editId">
-        <input type="hidden" id="editIsRoot">
-
         <div class="input-group" style="grid-column: span 2;">
             <label>NAMA PEKERJA</label>
             <div style="display: flex; gap: 5px;">
-                <select id="namaOrang" style="flex:1"></select>
-                <button onclick="tambahPekerja()" style="background:#3498db; color:white; width:40px;">+</button>
-                <button onclick="hapusPekerja()" style="background:#e74c3c; color:white; width:40px;">-</button>
+                <select id="namaOrang"></select>
+                <button onclick="tambahPekerja()" style="background:#3498db; color:white;">+</button>
+                <button onclick="hapusPekerja()" style="background:#e74c3c; color:white;">✕</button>
             </div>
         </div>
         <div class="input-group"><label>TANGGAL</label><input type="date" id="tgl"></div>
-        <div class="input-group"><label>CEGEL (Raw)</label><input type="text" id="cegel" onkeyup="formatInput(this)"></div>
+        <div class="input-group"><label>CEGEL (Raw)</label><input type="text" id="cegel" onkeyup="formatInputNoRp(this)"></div>
         <div class="input-group"><label>RATE</label><input type="text" id="rate" onkeyup="formatInput(this)"></div>
-        <div class="input-group"><label>GUARD DE + DD</label><input type="text" id="guardian" onkeyup="formatInput(this)"></div>
-        <div class="input-group"><label>MAKAN</label><input type="text" id="makan" value="10.000" onkeyup="formatInput(this)"></div>
-        <div class="input-group">
-            <label>KASBON</label>
-            <input type="text" id="kasbon" onkeyup="formatInput(this)">
-        </div>
-        <div style="display: flex; gap: 5px; margin-top: 20px;">
-            <button id="btnSimpan" style="background:#27ae60; color:white; height:48px; flex: 2;" onclick="simpanData()">SIMPAN DATA</button>
-            <button id="btnBatalEdit" style="background:#7f8c8d; color:white; height:48px; flex: 1; display: none;" onclick="bersih()">BATAL</button>
-        </div>
+        <div class="input-group"><label>GUARD</label><input type="text" id="guardian" onkeyup="formatInput(this)"></div>
+        <div class="input-group"><label>MAKAN</label><input type="text" id="makan" value="Rp 10.000" onkeyup="formatInput(this)"></div>
+        <div class="input-group"><label>KASBON (Bayar)</label><input type="text" id="kasbon" onkeyup="formatInput(this)"></div>
+        <button style="background:#27ae60; color:white;" onclick="simpanData()">SIMPAN</button>
     </div>
 
-    <div class="search-bar">
-        <input type="text" id="cariNama" placeholder="🔍 Cari Nama..." oninput="muatTabel()">
-        <input type="date" id="fTglAwal" onchange="muatTabel()">
-        <input type="date" id="fTglAkhir" onchange="muatTabel()">
-        <button onclick="resetFilter()" style="background:#e67e22; color:white;">RESET SEMUA</button>
+    <div class="filter-container">
+        <div class="filter-group"><label>CARI NAMA</label><input type="text" id="filterName" placeholder="Ketik nama..." onkeyup="muatSemua()"></div>
+        <div class="filter-group"><label>DARI TANGGAL</label><input type="date" id="filterStart" onchange="muatSemua()"></div>
+        <div class="filter-group"><label>SAMPAI TANGGAL</label><input type="date" id="filterEnd" onchange="muatSemua()"></div>
+        <button style="background:#7f8c8d; color:white; margin-left:auto" onclick="resetFilter()">RESET</button>
     </div>
 
     <div class="table-container">
         <table>
             <thead>
                 <tr>
-                    <th rowspan="2">NAMA PEKERJA</th>
-                    <th rowspan="2">TANGGAL</th>
-                    <th colspan="4" class="bg-earning">PERFORMA</th>
-                    <th colspan="2" class="bg-header-dark">BAGI HASIL</th>
-                    <th rowspan="2" style="background:#ffff00; color:#000">GUARD</th>
-                    <th rowspan="2">MAKAN</th>
-                    <th rowspan="2" style="background:#ff0000; color:#000">KASBON</th>
-                    <th rowspan="2">AKSI</th>
+                    <th rowspan="2" style="width:130px">NAMA</th><th rowspan="2" style="width:110px">TANGGAL</th><th colspan="4" class="bg-earning">PERFORMA</th><th colspan="2" class="bg-header-dark">BAGI HASIL</th><th rowspan="2" style="background:#ffff00; color:#000; width:110px">GUARD</th><th rowspan="2" style="width:110px">MAKAN</th><th rowspan="2" style="background:#ff0000; color:#fff; width:110px">KASBON</th><th rowspan="2" style="width:50px">X</th>
                 </tr>
                 <tr>
-                    <th class="bg-earning">CEGEL</th>
-                    <th class="bg-earning">JUTA(M)</th>
-                    <th class="bg-earning">RATE</th>
-                    <th class="bg-earning">TOTAL</th>
-                    <th style="background:#d35400; color:white">TRANSFER</th>
-                    <th style="background:#2980b9; color:white">TOMY</th>
+                    <th class="bg-earning">CEGEL</th><th class="bg-earning">M</th><th class="bg-earning">RATE</th><th class="bg-earning">TOTAL</th><th style="background:#d35400; color:white">TRANSFER</th><th style="background:#2980b9; color:white">TOMY</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
-            <tfoot><tr id="footerTotal" class="row-total"></tr></tfoot>
         </table>
+    </div>
+</div>
+
+<div id="modalKasbon" class="modal">
+    <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 style="color:#e74c3c; margin:0;">💰 KASBON & OPERASIONAL</h2>
+            <button onclick="document.getElementById('modalKasbon').style.display='none'" style="background:#333; color:white;">✕</button>
+        </div>
+        <div class="vcard-container">
+            <div style="font-size:0.7em; font-weight:bold; color:#95a5a6; margin-bottom:5px">SALDO OPERASIONAL</div>
+            <div id="vcardOps" class="vcard-scroll"></div>
+            <div style="font-size:0.7em; font-weight:bold; color:#95a5a6; margin:10px 0 5px 0">SALDO PRIBADI</div>
+            <div id="vcardPribadi" class="vcard-scroll"></div>
+        </div>
+        <div class="input-section" style="border-top: 6px solid #e74c3c;">
+            <div class="input-group"><label>TANGGAL</label><input type="date" id="k_tgl"></div>
+            <div class="input-group"><label>NAMA</label><select id="k_nama"></select></div>
+            <div class="input-group"><label>KAT</label><div style="display:flex; gap:3px;"><select id="k_kat" style="flex:1"></select><button onclick="tambahKategori()" style="background:#3498db; color:white;">+</button><button onclick="hapusKategori()" style="background:#e74c3c; color:white;">✕</button></div></div>
+            <div class="input-group"><label>JENIS</label><select id="k_jenis"><option value="PINJAM">PINJAM</option><option value="BAYAR">BAYAR</option></select></div>
+            <div class="input-group"><label>JUMLAH</label><input type="text" id="k_jumlah" onkeyup="formatInput(this)"></div>
+            <div class="input-group" style="grid-column: span 2;"><label>KET</label><input type="text" id="k_ket"></div>
+            <button style="background:#e74c3c; color:white;" onclick="simpanKasbonManual()">SIMPAN</button>
+        </div>
+        <div class="table-container" style="max-height: 40vh;">
+            <table><thead><tr style="background:#2c3e50; color:#fff"><th>TGL</th><th>NAMA</th><th>KAT</th><th>JENIS</th><th>JUMLAH</th><th>KET</th><th>X</th></tr></thead><tbody id="kasbonTableBody"></tbody></table>
+        </div>
+    </div>
+</div>
+
+<div id="accountModal" class="modal">
+    <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+            <h2 style="margin:0; color:#9b59b6">🔑 Akun Game Sync</h2>
+            <div><button onclick="tambahAkunBaru()" style="background:#3498db; color:white;">+ CHAR</button><button onclick="document.getElementById('accountModal').style.display='none'" style="background:#e74c3c; color:white; margin-left:10px;">✕</button></div>
+        </div>
+        <div class="table-container"><table><thead><tr><th>STATUS</th><th>CHAR</th><th>USER ID</th><th>PASS</th><th>PEKERJA</th><th>X</th></tr></thead><tbody id="accountTableBody"></tbody></table></div>
     </div>
 </div>
 
@@ -174,225 +170,187 @@
         messagingSenderId: "527376522624",
         appId: "1:527376522624:web:465177a2721c104551f565"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     let localDB = {};
 
-    window.onload = function() {
-        if(localStorage.getItem("isLoggedIn") === "true") document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('tgl').value = new Date().toISOString().split('T')[0];
-    };
-
-    function checkPin() { 
-        if(document.getElementById('pinInput').value === "1234") {
-            localStorage.setItem("isLoggedIn", "true");
-            document.getElementById('loginOverlay').style.display = 'none';
-        }
-    }
-
-    function logout() { localStorage.removeItem("isLoggedIn"); location.reload(); }
-
-    function openAccountWithPassword() {
-        const pass = prompt("Masukkan Password Akses Akun Game:");
-        if (pass === "54321") { toggleAccountModal(); } 
-        else if (pass !== null) { alert("Password Salah! Akses Ditolak."); }
-    }
-
-    function toggleAccountModal() {
-        const modal = document.getElementById('accountModal');
-        modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
-        if(modal.style.display === 'block') muatDataAkun();
-    }
-
-    function tambahAkunBaru() {
-        const charName = prompt("Masukkan Nama Karakter:");
-        if(!charName) return;
-        db.ref('dataAkun').push({ char: charName, user: '', pass: '', pekerja: '' });
-    }
-
-    function updateField(id, field, value) { db.ref('dataAkun/' + id).update({ [field]: value }); }
-    function hapusAkun(id) { if(confirm("Hapus data karakter ini?")) db.ref('dataAkun/' + id).remove(); }
-
-    function muatDataAkun() {
-        const tbody = document.getElementById('accountTableBody');
-        tbody.innerHTML = '';
-        const akun = localDB.dataAkun || {};
-        const daftarPekerja = localDB.daftarPekerja || {};
-        let workerOptions = '<option value="">-- Belum Dipakai --</option>';
-        Object.values(daftarPekerja).sort().forEach(p => { workerOptions += `<option value="${p}">${p}</option>`; });
-
-        Object.keys(akun).forEach(key => {
-            const d = akun[key];
-            const isAvailable = !d.pekerja;
-            const statusBadge = isAvailable ? '<span class="badge-available">Tersedia</span>' : '<span class="badge-owned">Digunakan</span>';
-            tbody.innerHTML += `<tr>
-                <td>${statusBadge}</td>
-                <td><input type="text" value="${d.char || ''}" onchange="updateField('${key}', 'char', this.value)"></td>
-                <td><input type="text" value="${d.user || ''}" onchange="updateField('${key}', 'user', this.value)"></td>
-                <td><input type="text" value="${d.pass || ''}" onchange="updateField('${key}', 'pass', this.value)"></td>
-                <td><select onchange="updateField('${key}', 'pekerja', this.value)">${workerOptions.replace(`value="${d.pekerja}"`, `value="${d.pekerja}" selected`)}</select></td>
-                <td><button onclick="hapusAkun('${key}')" style="background:#eee; color:#c0392b;">✕</button></td>
-            </tr>`;
-        });
-    }
-
-    db.ref('/').on('value', (snap) => {
+    db.ref('/').on('value', snap => {
         localDB = snap.val() || {};
-        const sel = document.getElementById('namaOrang');
-        const cur = sel.value;
-        sel.innerHTML = '<option value="">-- Pilih Nama --</option>';
-        if(localDB.daftarPekerja) { Object.values(localDB.daftarPekerja).sort().forEach(p => { sel.innerHTML += `<option value="${p}">${p}</option>`; }); }
-        sel.value = cur;
-        muatTabel();
+        updateSelects(); 
+        muatSemua();     
         if(document.getElementById('accountModal').style.display === 'block') muatDataAkun();
     });
 
-    function muatTabel() {
-        const body = document.getElementById('tableBody');
-        const cari = document.getElementById('cariNama').value.toLowerCase();
-        const tAwal = document.getElementById('fTglAwal').value;
-        const tAkhir = document.getElementById('fTglAkhir').value;
-        let list = [];
-        const source = localDB.earningData || {};
-        Object.keys(localDB).forEach(key => { if(key !== 'earningData' && key !== 'daftarPekerja' && key !== 'dataAkun' && localDB[key].namaOrang) list.push({ id: key, isRoot: true, ...localDB[key] }); });
-        Object.keys(source).forEach(key => { list.push({ id: key, isRoot: false, ...source[key] }); });
-
-        let filtered = list.filter(i => {
-            const mN = !cari || i.namaOrang.toLowerCase().includes(cari);
-            const mT = (!tAwal || i.tgl >= tAwal) && (!tAkhir || i.tgl <= tAkhir);
-            return mN && mT;
-        }).sort((a,b) => new Date(b.tgl) - new Date(a.tgl));
-
-        body.innerHTML = '';
-        let TC=0, TK=0, TT=0, TY=0, TG=0, TKB=0, TM=0;
-
-        filtered.forEach(i => {
-            let kotor = ((i.cegel||0)/1000000) * (i.rate||0);
-            let bagiDua = (kotor - (i.guardian||0)) / 2;
-            let nMakan = i.makan || 0;
-            let hTomy = bagiDua - nMakan;
-            let hTrans = (bagiDua + nMakan) - (i.kasbon || 0);
-            
-            TC += (i.cegel||0); TK += kotor; TT += hTrans; TY += hTomy; TG += (i.guardian||0); TKB += (i.kasbon||0); TM += nMakan;
-            
-            // Konversi data ke string JSON untuk mempermudah passing ke fungsi edit
-            const dataString = JSON.stringify(i).replace(/"/g, '&quot;');
-
-            body.innerHTML += `<tr>
-                <td>${i.namaOrang}</td><td>${i.tgl}</td>
-                <td>${(i.cegel||0).toLocaleString()}</td>
-                <td>${((i.cegel||0)/1000000).toFixed(1)}M</td>
-                <td>${(i.rate||0).toLocaleString()}</td>
-                <td class="txt-bold">${Math.round(kotor).toLocaleString()}</td>
-                <td class="txt-transfer">${Math.round(hTrans).toLocaleString()}</td>
-                <td class="txt-tomy">${Math.round(hTomy).toLocaleString()}</td>
-                <td>${(i.guardian||0).toLocaleString()}</td>
-                <td class="txt-makan">${nMakan.toLocaleString()}</td>
-                <td class="txt-kasbon">${(i.kasbon||0).toLocaleString()}</td>
-                <td>
-                    <button onclick="editData('${dataString}')" class="btn-edit">✎</button>
-                    <button onclick="hapusData('${i.id}', ${i.isRoot})" class="btn-delete">✕</button>
-                </td>
-            </tr>`;
+    function updateSelects() {
+        const pks = localDB.daftarPekerja ? Object.values(localDB.daftarPekerja).sort() : [];
+        const kats = localDB.daftarKategori ? Object.values(localDB.daftarKategori).sort() : [];
+        ['namaOrang', 'k_nama'].forEach(id => {
+            const el = document.getElementById(id); if(!el) return;
+            const cur = el.value; el.innerHTML = '<option value="">-- Pilih --</option>';
+            pks.forEach(p => el.innerHTML += `<option value="${p}">${p}</option>`);
+            el.value = cur;
         });
-        document.getElementById('footerTotal').innerHTML = `<td colspan="2">TOTAL</td><td>${TC.toLocaleString()}</td><td>${(TC/1000000).toFixed(1)}M</td><td>-</td><td>${Math.round(TK).toLocaleString()}</td><td>${Math.round(TT).toLocaleString()}</td><td>${Math.round(TY).toLocaleString()}</td><td>${TG.toLocaleString()}</td><td>${TM.toLocaleString()}</td><td>${TKB.toLocaleString()}</td><td></td>`;
-        updateDash(TK, TT, TKB);
-        document.getElementById('syncStatus').innerHTML = `📍 Sync: ${list.length} Data`;
-    }
-
-    function editData(json) {
-        const data = JSON.parse(json);
-        document.getElementById('editId').value = data.id;
-        document.getElementById('editIsRoot').value = data.isRoot;
-        document.getElementById('namaOrang').value = data.namaOrang;
-        document.getElementById('tgl').value = data.tgl;
-        document.getElementById('cegel').value = data.cegel.toLocaleString();
-        document.getElementById('rate').value = data.rate.toLocaleString();
-        document.getElementById('guardian').value = data.guardian.toLocaleString();
-        document.getElementById('makan').value = data.makan.toLocaleString();
-        document.getElementById('kasbon').value = data.kasbon.toLocaleString();
-        
-        document.getElementById('btnSimpan').innerHTML = "UPDATE DATA";
-        document.getElementById('btnSimpan').style.background = "#3498db";
-        document.getElementById('btnBatalEdit').style.display = "block";
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function simpanData() {
-        const n = document.getElementById('namaOrang').value;
-        const idEdit = document.getElementById('editId').value;
-        const isRoot = document.getElementById('editIsRoot').value === "true";
-        if(!n) return alert("Pilih Nama!");
-        
-        const obj = {
-            namaOrang: n, tgl: document.getElementById('tgl').value,
-            cegel: parseRaw(document.getElementById('cegel').value),
-            rate: parseRaw(document.getElementById('rate').value),
-            guardian: parseRaw(document.getElementById('guardian').value),
-            makan: parseRaw(document.getElementById('makan').value),
-            kasbon: parseRaw(document.getElementById('kasbon').value)
-        };
-
-        if(idEdit) {
-            // Update Data
-            const path = isRoot ? idEdit : 'earningData/' + idEdit;
-            db.ref(path).update(obj).then(() => { bersih(); });
-        } else {
-            // Simpan Baru
-            db.ref('earningData').push(obj).then(() => { bersih(); resetFilter(); });
+        const ekat = document.getElementById('k_kat'); if(ekat) {
+            const cur = ekat.value; ekat.innerHTML = '<option value="">-- Pilih --</option>';
+            kats.forEach(k => ekat.innerHTML += `<option value="${k}">${k}</option>`);
+            ekat.value = cur;
         }
     }
 
-    function bersih() {
-        ["cegel","rate","guardian","kasbon","editId","editIsRoot"].forEach(id => document.getElementById(id).value = '');
-        document.getElementById('makan').value = "10.000";
-        document.getElementById('btnSimpan').innerHTML = "SIMPAN DATA";
-        document.getElementById('btnSimpan').style.background = "#27ae60";
-        document.getElementById('btnBatalEdit').style.display = "none";
+    function muatSemua() {
+        const fS = document.getElementById('filterStart').value, fE = document.getElementById('filterEnd').value, fN = document.getElementById('filterName').value.toLowerCase();
+        const body = document.getElementById('tableBody'); body.innerHTML = '';
+        const kBody = document.getElementById('kasbonTableBody'); kBody.innerHTML = '';
+        const vOps = document.getElementById('vcardOps'); vOps.innerHTML = '';
+        const vPri = document.getElementById('vcardPribadi'); vPri.innerHTML = '';
+        let tkot = 0, ttra = 0, tkasE = 0, tkasO = 0, count = 0;
+        const pks = localDB.daftarPekerja ? Object.values(localDB.daftarPekerja).sort() : [];
+        const kats = localDB.daftarKategori ? Object.values(localDB.daftarKategori).sort() : [];
+        const dEarn = localDB.earningData || {};
+        Object.keys(dEarn).sort((a,b) => new Date(dEarn[b].tgl) - new Date(dEarn[a].tgl)).forEach(k => {
+            const i = dEarn[k];
+            if((fS && i.tgl < fS) || (fE && i.tgl > fE) || (fN && !i.namaOrang.toLowerCase().includes(fN))) return;
+            count++;
+            let kot = ((i.cegel||0)/1000000) * (i.rate||0);
+            let hTra = (((kot - (i.guardian||0)) / 2) + (i.makan || 0)) - (i.kasbon || 0);
+            let hTom = ((kot - (i.guardian||0)) / 2) - (i.makan || 0);
+            tkot += kot; ttra += hTra; tkasE += (i.kasbon || 0);
+            body.innerHTML += `<tr>
+                <td class="td-edit"><select onchange="upEarn('${k}','namaOrang',this.value)">${pks.map(p=>`<option value="${p}" ${p===i.namaOrang?'selected':''}>${p}</option>`).join('')}</select></td>
+                <td class="td-edit"><input type="date" value="${i.tgl}" onchange="upEarn('${k}','tgl',this.value)"></td>
+                <td class="td-edit"><input type="text" value="${(i.cegel||0).toLocaleString('id-ID')}" onchange="upEarnNum('${k}','cegel',this.value)"></td>
+                <td>${((i.cegel||0)/1000000).toFixed(1)}M</td>
+                <td class="td-edit"><input type="text" value="${fmtRp(i.rate||0)}" onchange="upEarnNum('${k}','rate',this.value)" onkeyup="formatInput(this)"></td>
+                <td>${fmtRp(kot)}</td><td class="txt-transfer">${fmtRp(hTra)}</td><td class="txt-tomy">${fmtRp(hTom)}</td>
+                <td class="td-edit"><input type="text" value="${fmtRp(i.guardian||0)}" onchange="upEarnNum('${k}','guardian',this.value)" onkeyup="formatInput(this)"></td>
+                <td class="td-edit"><input type="text" value="${fmtRp(i.makan||0)}" onchange="upEarnNum('${k}','makan',this.value)" onkeyup="formatInput(this)"></td>
+                <td class="td-edit txt-kasbon"><input type="text" value="${fmtRp(i.kasbon||0)}" onchange="upEarnNum('${k}','kasbon',this.value)" onkeyup="formatInput(this)"></td>
+                <td><button onclick="hapusEarning('${k}','${i.syncID||''}')">✕</button></td>
+            </tr>`;
+        });
+        const dKas = localDB.dbKasbon || {};
+        let rOps = {}, rPri = {};
+        Object.keys(dKas).reverse().forEach(k => {
+            const i = dKas[k];
+            const isOps = (i.kategori || '').toLowerCase().includes('operasional');
+            const targetRek = isOps ? rOps : rPri;
+            if(!targetRek[i.nama]) targetRek[i.nama] = {p:0, b:0};
+            if(i.jenis === 'PINJAM') { targetRek[i.nama].p += (i.jumlah||0); if(isOps) tkasO += i.jumlah; } else targetRek[i.nama].b += (i.jumlah||0);
+            kBody.innerHTML += `<tr class="${i.jenis === 'PINJAM' ? 'row-pinjam' : 'row-bayar'}">
+                <td class="td-edit"><input type="date" value="${i.tgl}" onchange="upKas('${k}','tgl',this.value)"></td>
+                <td class="td-edit"><select onchange="upKas('${k}','nama',this.value)">${pks.map(p=>`<option value="${p}" ${p===i.nama?'selected':''}>${p}</option>`).join('')}</select></td>
+                <td class="td-edit"><select onchange="upKas('${k}','kategori',this.value)">${kats.map(c=>`<option value="${c}" ${c===i.kategori?'selected':''}>${c}</option>`).join('')}</select></td>
+                <td class="td-edit"><select onchange="upKas('${k}','jenis',this.value)"><option value="PINJAM" ${i.jenis==='PINJAM'?'selected':''}>PINJAM</option><option value="BAYAR" ${i.jenis==='BAYAR'?'selected':''}>BAYAR</option></select></td>
+                <td class="td-edit"><input type="text" value="${fmtRp(i.jumlah||0)}" onchange="upKasNum('${k}','jumlah',this.value)" onkeyup="formatInput(this)"></td>
+                <td class="td-edit"><input type="text" value="${i.ket||''}" onchange="upKas('${k}','ket',this.value)"></td>
+                <td><button onclick="hapus('dbKasbon/${k}')">✕</button></td>
+            </tr>`;
+        });
+        const renderV = (rek, target) => Object.keys(rek).sort().forEach(nm => { const sisa = rek[nm].p - rek[nm].b; if(sisa !== 0) target.innerHTML += `<div class="vcard-user"><b>👤 ${nm}</b><br><span class="amt">${fmtRp(sisa)}</span></div>`; });
+        renderV(rOps, vOps); renderV(rPri, vPri);
+        document.getElementById('syncStatus').innerText = `📍 Terhubung (${count} Data)`;
+        document.getElementById('summaryStats').innerHTML = `<div class="stat-card" style="background:#27ae60"><div>KOTOR</div><div style="font-size:1.4em">${fmtRp(tkot)}</div></div><div class="stat-card" style="background:#e67e22"><div>TRANSFER</div><div style="font-size:1.4em">${fmtRp(ttra)}</div></div><div class="stat-card" style="background:#c0392b"><div>BON EARN</div><div style="font-size:1.4em">${fmtRp(tkasE)}</div></div><div class="stat-card" style="background:#2c3e50"><div>BON OPS</div><div style="font-size:1.4em">${fmtRp(tkasO)}</div></div>`;
     }
 
-    function importData(inp) {
-        const file = inp.files[0];
-        if(!file) return;
+    function muatDataAkun() {
+        const tbody = document.getElementById('accountTableBody'); tbody.innerHTML = '';
+        const akun = localDB.dataAkun || {};
+        const pks = localDB.daftarPekerja ? Object.values(localDB.daftarPekerja).sort() : [];
+        Object.keys(akun).forEach(k => {
+            const d = akun[k], isUsed = (d.pekerja && d.pekerja !== "");
+            tbody.innerHTML += `<tr>
+                <td><span class="status-dot ${isUsed?'dot-green':'dot-red'}"></span> ${isUsed?'Terpakai':'Tersedia'}</td>
+                <td class="td-edit"><input type="text" value="${d.char||''}" onchange="db.ref('dataAkun/${k}/char').set(this.value)"></td>
+                <td class="td-edit"><input type="text" value="${d.user||''}" onchange="db.ref('dataAkun/${k}/user').set(this.value)"></td>
+                <td class="td-edit"><input type="text" value="${d.pass||''}" onchange="db.ref('dataAkun/${k}/pass').set(this.value)"></td>
+                <td class="td-edit"><select onchange="db.ref('dataAkun/${k}/pekerja').set(this.value)"><option value="">-- Kosong --</option>${pks.map(p=>`<option value="${p}" ${p===d.pekerja?'selected':''}>${p}</option>`).join('')}</select></td>
+                <td><button onclick="hapus('dataAkun/${k}')">✕</button></td>
+            </tr>`;
+        });
+    }
+
+    function hapusPekerja() {
+        const sel = document.getElementById('namaOrang').value;
+        if(!sel) return alert("Pilih nama dulu!");
+        if(confirm("Hapus " + sel + " dari daftar?")) {
+            const list = localDB.daftarPekerja || {};
+            const key = Object.keys(list).find(k => list[k] === sel);
+            if(key) db.ref('daftarPekerja/' + key).remove();
+        }
+    }
+    function hapusKategori() {
+        const sel = document.getElementById('k_kat').value;
+        if(!sel) return alert("Pilih kategori!");
+        if(confirm("Hapus " + sel + "?")) {
+            const list = localDB.daftarKategori || {};
+            const key = Object.keys(list).find(k => list[k] === sel);
+            if(key) db.ref('daftarKategori/' + key).remove();
+        }
+    }
+
+    function simpanData() {
+        const n = document.getElementById('namaOrang').value, t = document.getElementById('tgl').value, kVal = parseRaw(document.getElementById('kasbon').value);
+        if(!n) return alert("Pilih Nama!");
+        const sID = 'SYNC_' + Date.now();
+        db.ref('earningData').push({ namaOrang: n, tgl: t, cegel: parseRaw(document.getElementById('cegel').value), rate: parseRaw(document.getElementById('rate').value), guardian: parseRaw(document.getElementById('guardian').value), makan: parseRaw(document.getElementById('makan').value), kasbon: kVal, syncID: sID });
+        if(kVal > 0) {
+            const katOps = (localDB.daftarKategori ? Object.values(localDB.daftarKategori) : []).find(k => k.toUpperCase().includes("OPERASIONAL")) || "OPERASIONAL";
+            db.ref('dbKasbon').push({ tgl: t, nama: n, kategori: katOps, jenis: "BAYAR", jumlah: kVal, ket: "POTONG GAJI", syncID: sID });
+        }
+        ["cegel","rate","guardian","kasbon"].forEach(id => document.getElementById(id).value = '');
+    }
+
+    function hapusEarning(eKey, sID) {
+        if(!confirm("Hapus?")) return;
+        db.ref('earningData/' + eKey).remove();
+        if(sID) { const dK = localDB.dbKasbon || {}; Object.keys(dK).forEach(k => { if(dK[k].syncID === sID) db.ref('dbKasbon/' + k).remove(); }); }
+    }
+
+    function fmtRp(v) { return 'Rp ' + Math.round(v).toLocaleString('id-ID'); }
+    function parseRaw(s) { return parseFloat(s.toString().replace(/Rp/g, '').replace(/\./g, '').replace(/\s/g, '').replace(',', '.')) || 0; }
+    function formatInput(obj) { let v = obj.value.replace(/[^0-9]/g, ''); obj.value = v ? 'Rp ' + parseInt(v).toLocaleString('id-ID') : ''; }
+    function formatInputNoRp(obj) { let v = obj.value.replace(/[^0-9]/g, ''); obj.value = v ? parseInt(v).toLocaleString('id-ID') : ''; }
+    function checkPin() { if(document.getElementById('pinInput').value === "1234") { localStorage.setItem("isLoggedIn", "true"); document.getElementById('loginOverlay').style.display = 'none'; } }
+    function logout() { localStorage.removeItem("isLoggedIn"); location.reload(); }
+    function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
+    function bukaKasbonPrompt() { if(prompt("Pass Kasbon:") === "tomy1234") document.getElementById('modalKasbon').style.display='block'; }
+    function openAccountWithPassword() { if(prompt("Pass Akun:") === "54321") { document.getElementById('accountModal').style.display='block'; muatDataAkun(); } }
+    function upEarn(id, f, v) { db.ref('earningData/' + id).update({ [f]: v }); }
+    function upEarnNum(id, f, v) { db.ref('earningData/' + id).update({ [f]: parseRaw(v) }); }
+    function upKas(id, f, v) { db.ref('dbKasbon/' + id).update({ [f]: v }); }
+    function upKasNum(id, f, v) { db.ref('dbKasbon/' + id).update({ [f]: parseRaw(v) }); }
+    function hapus(p) { if(confirm("Hapus?")) db.ref(p).remove(); }
+    function tambahPekerja() { const n = prompt("Nama:"); if(n) db.ref('daftarPekerja').push(n); }
+    function tambahKategori() { const k = prompt("Kategori:"); if(k) db.ref('daftarKategori').push(k); }
+    function tambahAkunBaru() { const c = prompt("Char:"); if(c) db.ref('dataAkun').push({ char: c, user: '', pass: '', pekerja: '' }); }
+    function simpanKasbonManual() {
+        const n = document.getElementById('k_nama').value; if(!n) return alert("Pilih Nama!");
+        db.ref('dbKasbon').push({ tgl: document.getElementById('k_tgl').value, nama: n, kategori: document.getElementById('k_kat').value, jenis: document.getElementById('k_jenis').value, jumlah: parseRaw(document.getElementById('k_jumlah').value), ket: document.getElementById('k_ket').value });
+        document.getElementById('k_jumlah').value = ''; document.getElementById('k_ket').value = '';
+    }
+    function resetFilter() { document.getElementById('filterStart').value=''; document.getElementById('filterEnd').value=''; document.getElementById('filterName').value=''; muatSemua(); }
+    
+    // FUNGSI BACKUP & RESTORE
+    function exportData() { db.ref('/').once('value').then(snap => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(snap.val(),null,2)],{type:'application/json'})); a.download='Backup_Farmhouse.json'; a.click(); }); }
+    function importData(input) {
+        const file = input.files[0]; if(!file) return;
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
-                let data = JSON.parse(e.target.result);
-                let fixedData = { daftarPekerja: data.daftarPekerja || {}, earningData: {}, dataAkun: data.dataAkun || {} };
-                Object.keys(data).forEach(key => { if(key !== 'daftarPekerja' && key !== 'earningData' && key !== 'dataAkun' && data[key].namaOrang) fixedData.earningData[key] = data[key]; });
-                if(data.earningData) fixedData.earningData = {...fixedData.earningData, ...data.earningData};
-                if(confirm("Restore data sekarang?")) db.ref('/').set(fixedData).then(() => { alert("Berhasil!"); location.reload(); });
-            } catch(err) { alert("File rusak!"); }
+                const data = JSON.parse(e.target.result);
+                if(confirm("⚠️ Timpa semua data cloud dengan file backup ini?")) {
+                    db.ref('/').set(data).then(() => alert("✅ Restore Berhasil!"));
+                }
+            } catch(err) { alert("❌ File tidak valid!"); }
         };
         reader.readAsText(file);
     }
 
-    function resetFilter() {
-        document.getElementById('cariNama').value = "";
-        document.getElementById('fTglAwal').value = "";
-        document.getElementById('fTglAkhir').value = "";
-        muatTabel();
-    }
-
-    function hapusData(id, isRoot) { if(confirm("Hapus?")) { const path = isRoot ? id : 'earningData/' + id; db.ref(path).remove(); } }
-    function parseRaw(s) { return parseFloat(s.toString().replace(/\./g, '').replace(',', '.')) || 0; }
-    function formatInput(obj) { 
-        let v = obj.value.replace(/[^,\d]/g, ''); let s = v.split(','); let si = s[0].length % 3;
-        let r = s[0].substr(0, si); let ri = s[0].substr(si).match(/\d{3}/gi);
-        if (ri) { r += (si ? '.' : '') + ri.join('.'); }
-        obj.value = s[1] != undefined ? r + ',' + s[1] : r;
-    }
-    function updateDash(k, t, kb) { 
-        document.getElementById('summaryStats').innerHTML = `
-        <div class="stat-card" style="background:#27ae60"><div>KOTOR</div><div style="font-size:1.6em">Rp ${Math.round(k).toLocaleString()}</div></div>
-        <div class="stat-card" style="background:#e67e22"><div>TRANSFER</div><div style="font-size:1.6em">Rp ${Math.round(t).toLocaleString()}</div></div>
-        <div class="stat-card" style="background:#c0392b"><div>KASBON</div><div style="font-size:1.6em">Rp ${Math.round(kb).toLocaleString()}</div></div>`;
-    }
-    function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
-    function tambahPekerja() { const n = prompt("Nama:"); if(n) db.ref('daftarPekerja').push(n); }
-    function hapusPekerja() { const n = document.getElementById('namaOrang').value; if(n && confirm("Hapus?")) { db.ref('daftarPekerja').once('value').then(s => { s.forEach(c => { if(c.val() === n) c.ref.remove(); }); }); } }
-    function exportData() { db.ref('/').once('value').then(snap => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(snap.val(),null,2)],{type:'application/json'})); a.download='Backup_Farmhouse.json'; a.click(); }); }
+    window.onload = () => {
+        if(localStorage.getItem("isLoggedIn") === "true") document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('tgl').value = new Date().toISOString().split('T')[0];
+        document.getElementById('k_tgl').value = new Date().toISOString().split('T')[0];
+    };
 </script>
 </body>
 </html>
