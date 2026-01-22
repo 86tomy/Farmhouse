@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Farmhouse Bogor - Official Sync v22.5</title>
+    <title>Farmhouse Bogor - Official Sync v22.7</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
@@ -44,6 +44,11 @@
         .vcard-scroll { display: flex; overflow-x: auto; padding-bottom: 10px; gap: 12px; }
         .vcard-user { background: linear-gradient(135deg, #2c3e50, #34495e); color: white; padding: 12px; border-radius: 12px; min-width: 160px; border-left: 5px solid #e74c3c; flex-shrink: 0; }
         .vcard-user .amt { color: #ffff00; font-weight: 800; font-size: 1.1em; }
+
+        .cal-grid { display: grid; grid-template-columns: repeat(31, 1fr); gap: 2px; margin-top: 5px; min-width: 650px; }
+        .cal-day { font-size: 9px; padding: 4px 0; border-radius: 3px; color: white; text-align: center; font-weight: bold; }
+        .day-active { background: #27ae60; }
+        .day-missing { background: #e74c3c; opacity: 0.3; }
     </style>
 </head>
 <body class="dark-mode">
@@ -62,7 +67,8 @@
             <h2 style="margin:0; color:var(--primary)">Farmhouse Bogor Official</h2>
             <div id="syncStatus" class="sync-info">📍 Menghubungkan...</div>
         </div>
-        <div style="display:flex; gap:10px">
+        <div style="display:flex; gap:8px; flex-wrap: wrap; justify-content: flex-end;">
+            <button style="background:#1abc9c; color:white" onclick="openPersonalStats()">📊 Monthly Report</button>
             <button style="background:#e67e22; color:white" onclick="document.getElementById('modalCost').style.display='block'">💸 Cost</button>
             <button style="background:#e74c3c; color:white" onclick="bukaKasbonPrompt()">💰 Kasbon</button>
             <button style="background:#9b59b6; color:white" onclick="openAccountWithPassword()">🔑 Akun Game</button>
@@ -126,6 +132,44 @@
     </div>
 </div>
 
+<div id="modalPersonalStats" class="modal">
+    <div class="modal-content" style="max-width: 1200px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 style="color:#1abc9c; margin:0;">📊 REPORT ABSENSI & WEEKLY ACHIEVEMENT</h2>
+            <button onclick="document.getElementById('modalPersonalStats').style.display='none'" style="background:#333; color:white;">✕</button>
+        </div>
+        
+        <div class="filter-container" style="margin-bottom:15px; border-radius: 12px; border-bottom: none; background: #2c3e50; display: flex; align-items: center; gap: 20px;">
+            <div class="filter-group">
+                <label style="color:white">PILIH BULAN</label>
+                <select id="statMonth" onchange="generateMonthlyReport()">
+                    <option value="01">Januari</option><option value="02">Februari</option><option value="03">Maret</option>
+                    <option value="04">April</option><option value="05">Mei</option><option value="06">Juni</option>
+                    <option value="07">Juli</option><option value="08">Agustus</option><option value="09">September</option>
+                    <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label style="color:#f1c40f; font-weight: bold;">SET SIKLUS (TGL MULAI)</label>
+                <div style="display: flex; gap: 5px; align-items: center;">
+                    <input type="number" id="startDayConfig" min="1" max="31" disabled 
+                        style="width: 60px; text-align: center; border: 2px solid #f1c40f; color: white; background: rgba(0,0,0,0.3);">
+                    <button id="btnEditStartDay" onclick="toggleEditStartDay()" style="background:#f1c40f; color:#000; padding: 5px 10px; font-size: 0.8em;">EDIT</button>
+                </div>
+            </div>
+
+            <div style="margin-left: auto; display: flex; gap: 15px; align-items: center;">
+                <div style="display:flex; align-items:center; gap:5px; color:white; font-size:0.8em;"><div style="width:15px; height:15px; background:#3498db; border-radius:3px;"></div> ≥100M</div>
+                <div style="display:flex; align-items:center; gap:5px; color:white; font-size:0.8em;"><div style="width:15px; height:15px; background:#f1c40f; border-radius:3px;"></div> ≥70M</div>
+                <div style="display:flex; align-items:center; gap:5px; color:white; font-size:0.8em;"><div style="width:15px; height:15px; background:#e74c3c; border-radius:3px;"></div> <70M</div>
+            </div>
+        </div>
+
+        <div id="monthlyReportOutput" class="table-container"></div>
+    </div>
+</div>
+
 <div id="modalCost" class="modal">
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -135,56 +179,34 @@
         <div class="input-section" style="border-top: 6px solid #e67e22;">
             <div class="input-group"><label>TGL</label><input type="date" id="c_tgl"></div>
             <div class="input-group" style="grid-column: span 2;"><label>JENIS BARANG/KEBUTUHAN</label><input type="text" id="c_jenis"></div>
-            <div class="input-group"><label>QTY</label><input type="number" id="c_qty" placeholder="0" onkeyup="hitungTotalCost()"></div>
+            <div class="input-group"><label>QTY</label><input type="number" id="c_qty" placeholder="0"></div>
             <div class="input-group"><label>SATUAN</label><input type="text" id="c_satuan" placeholder="Pcs/Bks/dll"></div>
-            <div class="input-group"><label>HARGA</label><input type="text" id="c_harga" onkeyup="formatInput(this); hitungTotalCost();"></div>
-            <div class="input-group"><label>TOTAL</label><input type="text" id="c_total" readonly style="background:#eee; color:#333"></div>
+            <div class="input-group"><label>HARGA</label><input type="text" id="c_harga" onkeyup="formatInput(this)"></div>
+            <div class="input-group" style="grid-column: span 2;"><label>KETERANGAN</label><input type="text" id="c_ket" placeholder="Tambahkan catatan..."></div>
             <button style="background:#e67e22; color:white;" onclick="simpanCost()">SIMPAN</button>
         </div>
         <div class="table-container">
-            <table><thead><tr style="background:#2c3e50; color:#fff"><th>TANGGAL</th><th>KEBUTUHAN / BON OPS</th><th>QTY</th><th>SATUAN</th><th>HARGA</th><th>TOTAL</th><th>X</th></tr></thead><tbody id="costTableBody"></tbody></table>
+            <table>
+                <thead>
+                    <tr style="background:#2c3e50; color:#fff">
+                        <th>TANGGAL</th>
+                        <th>KEBUTUHAN / BON OPS</th>
+                        <th>QTY</th>
+                        <th>SATUAN</th>
+                        <th>HARGA</th>
+                        <th>TOTAL</th>
+                        <th>KETERANGAN</th>
+                        <th>X</th>
+                    </tr>
+                </thead>
+                <tbody id="costTableBody"></tbody>
+            </table>
         </div>
     </div>
 </div>
 
-<div id="modalKasbon" class="modal">
-    <div class="modal-content">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h2 style="color:#e74c3c; margin:0;">💰 MANAJEMEN KASBON</h2>
-            <button onclick="document.getElementById('modalKasbon').style.display='none'" style="background:#333; color:white;">✕</button>
-        </div>
-        <div id="vcardOps" class="vcard-scroll" style="margin-bottom:20px"></div>
-        <div class="input-section" style="border-top: 6px solid #e74c3c;">
-            <div class="input-group"><label>TGL</label><input type="date" id="k_tgl"></div>
-            <div class="input-group"><label>NAMA</label><select id="k_nama"></select></div>
-            <div class="input-group">
-                <label>KATEGORI</label>
-                <div style="display: flex; gap: 5px;">
-                    <select id="k_kategori"></select>
-                    <button onclick="tambahKategori()" style="background:#3498db; color:white;">+</button>
-                    <button onclick="hapusKategori()" style="background:#e74c3c; color:white;">-</button>
-                </div>
-            </div>
-            <div class="input-group"><label>JENIS</label><select id="k_jenis"><option value="PINJAM">PINJAM</option><option value="BAYAR">BAYAR</option></select></div>
-            <div class="input-group"><label>JUMLAH</label><input type="text" id="k_jumlah" onkeyup="formatInput(this)"></div>
-            <div class="input-group" style="grid-column: span 2;"><label>KETERANGAN</label><input type="text" id="k_ket"></div>
-            <button style="background:#e74c3c; color:white;" onclick="simpanKasbonManual()">SIMPAN</button>
-        </div>
-        <div class="table-container">
-            <table><thead><tr style="background:#2c3e50; color:#fff"><th>TGL</th><th>NAMA</th><th>KATEGORI</th><th>JENIS</th><th>JUMLAH</th><th>KET</th><th>X</th></tr></thead><tbody id="kasbonTableBody"></tbody></table>
-        </div>
-    </div>
-</div>
-
-<div id="accountModal" class="modal">
-    <div class="modal-content">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-            <h2 style="margin:0; color:#9b59b6">🔑 Akun Game Sync</h2>
-            <div><button onclick="tambahAkunBaru()" style="background:#3498db; color:white;">+ CHAR</button><button onclick="document.getElementById('accountModal').style.display='none'" style="background:#e74c3c; color:white; margin-left:10px;">✕</button></div>
-        </div>
-        <div class="table-container"><table><thead><tr><th>STATUS</th><th>CHAR</th><th>USER ID</th><th>PASS</th><th>PEKERJA</th><th>X</th></tr></thead><tbody id="accountTableBody"></tbody></table></div>
-    </div>
-</div>
+<div id="modalKasbon" class="modal"><div class="modal-content"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;"><h2 style="color:#e74c3c; margin:0;">💰 MANAJEMEN KASBON</h2><button onclick="document.getElementById('modalKasbon').style.display='none'" style="background:#333; color:white;">✕</button></div><div id="vcardOps" class="vcard-scroll" style="margin-bottom:20px"></div><div class="input-section" style="border-top: 6px solid #e74c3c;"><div class="input-group"><label>TGL</label><input type="date" id="k_tgl"></div><div class="input-group"><label>NAMA</label><select id="k_nama"></select></div><div class="input-group"><label>KATEGORI</label><div style="display: flex; gap: 5px;"><select id="k_kategori"></select><button onclick="tambahKategori()" style="background:#3498db; color:white;">+</button><button onclick="hapusKategori()" style="background:#e74c3c; color:white;">-</button></div></div><div class="input-group"><label>JENIS</label><select id="k_jenis"><option value="PINJAM">PINJAM</option><option value="BAYAR">BAYAR</option></select></div><div class="input-group"><label>JUMLAH</label><input type="text" id="k_jumlah" onkeyup="formatInput(this)"></div><div class="input-group" style="grid-column: span 2;"><label>KETERANGAN</label><input type="text" id="k_ket"></div><button style="background:#e74c3c; color:white;" onclick="simpanKasbonManual()">SIMPAN</button></div><div class="table-container"><table><thead><tr style="background:#2c3e50; color:#fff"><th>TGL</th><th>NAMA</th><th>KATEGORI</th><th>JENIS</th><th>JUMLAH</th><th>KET</th><th>X</th></tr></thead><tbody id="kasbonTableBody"></tbody></table></div></div></div>
+<div id="accountModal" class="modal"><div class="modal-content"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;"><h2 style="margin:0; color:#9b59b6">🔑 Akun Game Sync</h2><div><button onclick="tambahAkunBaru()" style="background:#3498db; color:white;">+ CHAR</button><button onclick="document.getElementById('accountModal').style.display='none'" style="background:#e74c3c; color:white; margin-left:10px;">✕</button></div></div><div class="table-container"><table><thead><tr><th>STATUS</th><th>CHAR</th><th>USER ID</th><th>PASS</th><th>PEKERJA</th><th>X</th></tr></thead><tbody id="accountTableBody"></tbody></table></div></div></div>
 
 <script>
     const firebaseConfig = {
@@ -204,7 +226,82 @@
         localDB = snap.val() || {};
         updateSelects(); 
         muatSemua();     
+        if(localDB.configApp && localDB.configApp.startDay) {
+            document.getElementById('startDayConfig').value = localDB.configApp.startDay;
+        }
     });
+
+    function toggleEditStartDay() {
+        const input = document.getElementById('startDayConfig');
+        const btn = document.getElementById('btnEditStartDay');
+        if (input.disabled) {
+            input.disabled = false; input.style.background = "#fff"; input.style.color = "#000";
+            btn.innerText = "SIMPAN"; btn.style.background = "#27ae60"; btn.style.color = "#fff";
+        } else {
+            let val = parseInt(input.value);
+            if (val < 1 || val > 31 || isNaN(val)) return alert("Tanggal harus 1-31!");
+            db.ref('configApp/startDay').set(val).then(() => {
+                input.disabled = true; input.style.background = "rgba(0,0,0,0.3)"; input.style.color = "white";
+                btn.innerText = "EDIT"; btn.style.background = "#f1c40f"; btn.style.color = "#000";
+                generateMonthlyReport();
+            });
+        }
+    }
+
+    function openPersonalStats() {
+        const now = new Date();
+        document.getElementById('statMonth').value = String(now.getMonth() + 1).padStart(2, '0');
+        const savedDay = (localDB.configApp && localDB.configApp.startDay) ? localDB.configApp.startDay : 1;
+        document.getElementById('startDayConfig').value = savedDay;
+        document.getElementById('modalPersonalStats').style.display = 'block';
+        generateMonthlyReport();
+    }
+
+    function generateMonthlyReport() {
+        const month = document.getElementById('statMonth').value;
+        const startDay = parseInt(document.getElementById('startDayConfig').value) || 1;
+        const year = new Date().getFullYear();
+        const workers = localDB.daftarPekerja ? Object.values(localDB.daftarPekerja).sort() : [];
+        const earnings = localDB.earningData || {};
+        const startDate = new Date(year, parseInt(month) - 1, startDay);
+        let html = `<table><thead><tr><th style="width:150px">PEKERJA</th><th>TOTAL CEGEL (SIKLUS)</th><th>HARI AKTIF</th><th>TRACKING ABSENSI & WEEKLY ACHIEVEMENT</th></tr></thead><tbody>`;
+        workers.forEach(worker => {
+            let totalCegel = 0, daysActive = 0, weeklyData = [0, 0, 0, 0, 0];
+            let calendarHtml = `<div class="cal-grid">`;
+            for (let i = 0; i < 31; i++) {
+                let currentLoopDate = new Date(startDate);
+                currentLoopDate.setDate(startDate.getDate() + i);
+                const d = currentLoopDate.getDate(), m = String(currentLoopDate.getMonth() + 1).padStart(2, '0'), y = currentLoopDate.getFullYear();
+                const dateStr = `${y}-${m}-${String(d).padStart(2, '0')}`;
+                const dayData = Object.values(earnings).find(e => e.namaOrang === worker && e.tgl === dateStr);
+                let indexMinggu = Math.min(Math.floor(i / 7), 4);
+                if (dayData) {
+                    totalCegel += (dayData.cegel || 0); daysActive++; weeklyData[indexMinggu] += (dayData.cegel || 0);
+                    calendarHtml += `<div class="cal-day day-active" title="${dateStr}">${d}</div>`;
+                } else {
+                    calendarHtml += `<div class="cal-day day-missing" title="${dateStr}">${d}</div>`;
+                }
+            }
+            calendarHtml += `</div>`;
+            let weeklyHtml = `<div style="display:flex; gap:10px; margin-top:12px;">`;
+            weeklyData.forEach((valRaw, idx) => {
+                let labelTgl = new Date(startDate); labelTgl.setDate(startDate.getDate() + (idx * 7));
+                let tglDisplay = labelTgl.getDate() + "/" + (labelTgl.getMonth() + 1);
+                let valM = (valRaw / 1000000).toFixed(1);
+                let barColor = valRaw >= 100000000 ? "#3498db" : (valRaw >= 70000000 ? "#f1c40f" : "#e74c3c");
+                weeklyHtml += `<div style="flex:1; background: rgba(255,255,255,0.03); padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
+                    <div style="font-size: 8px; color: #888;">Minggu ${idx+1} (${tglDisplay})</div>
+                    <div style="font-weight: 900; font-size: 13px; color: ${barColor};">${valM}M</div>
+                    <div style="width: 100%; height: 6px; background: #222; border-radius: 3px; margin-top:5px; overflow:hidden;">
+                        <div style="width: ${Math.min((valRaw/100000000)*100,100)}%; height: 100%; background: ${barColor};"></div>
+                    </div>
+                </div>`;
+            });
+            weeklyHtml += `</div>`;
+            html += `<tr><td><b>${worker}</b></td><td style="color:#27ae60"><b>${(totalCegel/1000000).toFixed(1)} M</b></td><td>${daysActive} Hari</td><td style="padding: 10px; background: rgba(0,0,0,0.1);">${calendarHtml} ${weeklyHtml}</td></tr>`;
+        });
+        document.getElementById('monthlyReportOutput').innerHTML = html + `</tbody></table>`;
+    }
 
     function updateSelects() {
         const pks = localDB.daftarPekerja ? Object.values(localDB.daftarPekerja).sort() : [];
@@ -224,10 +321,7 @@
     }
 
     function muatSemua() {
-        const fS = document.getElementById('filterStart').value;
-        const fE = document.getElementById('filterEnd').value;
-        const fN = document.getElementById('filterName').value.toLowerCase();
-        const fM = document.getElementById('filterMonth').value;
+        const fS = document.getElementById('filterStart').value, fE = document.getElementById('filterEnd').value, fN = document.getElementById('filterName').value.toLowerCase(), fM = document.getElementById('filterMonth').value;
         const body = document.getElementById('tableBody'); body.innerHTML = '';
         const cBody = document.getElementById('costTableBody'); cBody.innerHTML = '';
         const kBody = document.getElementById('kasbonTableBody'); kBody.innerHTML = '';
@@ -240,45 +334,38 @@
         const dEarn = localDB.earningData || {};
         Object.keys(dEarn).sort((a,b) => new Date(dEarn[b].tgl) - new Date(dEarn[a].tgl)).forEach(k => {
             const i = dEarn[k];
-            let matchMonth = fM ? i.tgl.split('-')[1] === fM : true;
-            let matchDate = (fS && i.tgl < fS) || (fE && i.tgl > fE) ? false : true;
-            let matchName = fN && !i.namaOrang.toLowerCase().includes(fN) ? false : true;
-            if(!matchMonth || !matchDate || !matchName) return;
-            let kot = ((i.cegel||0)/1000000) * (i.rate||0);
-            let hTra = (((kot - (i.guardian||0)) / 2) + (i.makan || 0)) - (i.kasbon || 0);
-            let hTom = ((kot - (i.guardian||0)) / 2) - (i.makan || 0);
+            if((fM && i.tgl.split('-')[1] !== fM) || (fS && i.tgl < fS) || (fE && i.tgl > fE) || (fN && !i.namaOrang.toLowerCase().includes(fN))) return;
+            let kot = ((i.cegel||0)/1000000) * (i.rate||0), hTra = (((kot - (i.guardian||0)) / 2) + (i.makan || 0)) - (i.kasbon || 0), hTom = ((kot - (i.guardian||0)) / 2) - (i.makan || 0);
             count++; tkot += kot; ttra += hTra; ttomCurrent += hTom; tkasE += (i.kasbon || 0);
             body.innerHTML += `<tr><td class="td-edit"><select onchange="upEarn('${k}','namaOrang',this.value)">${pks.map(p=>`<option value="${p}" ${p===i.namaOrang?'selected':''}>${p}</option>`).join('')}</select></td><td class="td-edit"><input type="date" value="${i.tgl}" onchange="upEarn('${k}','tgl',this.value)"></td><td class="td-edit"><input type="text" value="${(i.cegel||0).toLocaleString('id-ID')}" onchange="upEarnNum('${k}','cegel',this.value)"></td><td>${((i.cegel||0)/1000000).toFixed(1)}M</td><td class="td-edit"><input type="text" value="${fmtRp(i.rate)}" onchange="upEarnNum('${k}','rate',this.value)" onkeyup="formatInput(this)"></td><td>${fmtRp(kot)}</td><td class="txt-transfer">${fmtRp(hTra)}</td><td class="txt-tomy">${fmtRp(hTom)}</td><td class="td-edit"><input type="text" value="${fmtRp(i.guardian)}" onchange="upEarnNum('${k}','guardian',this.value)" onkeyup="formatInput(this)"></td><td class="td-edit"><input type="text" value="${fmtRp(i.makan)}" onchange="upEarnNum('${k}','makan',this.value)" onkeyup="formatInput(this)"></td><td class="td-edit"><input type="text" value="${fmtRp(i.kasbon)}" onchange="upEarnNum('${k}','kasbon',this.value)" onkeyup="formatInput(this)"></td><td><button onclick="hapusDashboard('${k}')">✕</button></td></tr>`;
         });
 
-        const dKas = localDB.dbKasbon || {};
-        let rekKas = {};
+        const dKas = localDB.dbKasbon || {}; let rekKas = {};
         Object.keys(dKas).reverse().forEach(k => {
-            const i = dKas[k]; const amt = i.jumlah || 0;
-            if(!rekKas[i.nama]) rekKas[i.nama] = 0;
-            if(i.jenis === 'PINJAM') rekKas[i.nama] += amt; else rekKas[i.nama] -= amt;
+            const i = dKas[k], amt = i.jumlah || 0;
+            if(!rekKas[i.nama]) rekKas[i.nama] = 0; rekKas[i.nama] += (i.jenis === 'PINJAM' ? amt : -amt);
             if ((i.kategori || '').toLowerCase().includes('operasional')) tkasO_Total += (i.jenis === 'PINJAM' ? amt : -amt);
             kBody.innerHTML += `<tr style="color:${i.jenis==='PINJAM'?'#ff4d4d':'#2ecc71'}"><td class="td-edit"><input type="date" value="${i.tgl}" onchange="upKas('${k}','tgl',this.value)"></td><td class="td-edit"><select onchange="upKas('${k}','nama',this.value)">${pks.map(p=>`<option value="${p}" ${p===i.nama?'selected':''}>${p}</option>`).join('')}</select></td><td class="td-edit"><select onchange="upKas('${k}','kategori',this.value)">${kats.map(kat=>`<option value="${kat}" ${kat===i.kategori?'selected':''}>${kat}</option>`).join('')}</select></td><td>${i.jenis}</td><td class="td-edit"><input type="text" value="${fmtRp(amt)}" onchange="upKasNum('${k}','jumlah',this.value)" onkeyup="formatInput(this)"></td><td class="td-edit"><input type="text" value="${i.ket||''}" onchange="upKas('${k}','ket',this.value)"></td><td><button onclick="hapus('dbKasbon/${k}')">✕</button></td></tr>`;
         });
         Object.keys(rekKas).forEach(n => { if(rekKas[n] !== 0) vOps.innerHTML += `<div class="vcard-user"><b>👤 ${n}</b><br><span class="amt">${fmtRp(rekKas[n])}</span></div>`; });
 
+        // MODIFIKASI TABEL COST - SEMUA BISA DIEDIT
         const dCost = localDB.dbCost || {};
-        Object.keys(dCost).sort((a,b) => new Date(dCost[b].tgl) - new Date(dCost[a].tgl)).forEach(k => {
-            const i = dCost[k]; const tot = (i.qty||0)*(i.harga||0); tCostCurrent += tot;
-            cBody.innerHTML += `<tr><td>${i.tgl || '-'}</td><td style="text-align:left; padding-left:15px">${i.jenis}</td><td>${i.qty}</td><td>${i.satuan || '-'}</td><td>${fmtRp(i.harga)}</td><td style="font-weight:bold">${fmtRp(tot)}</td><td><button onclick="hapus('dbCost/${k}')">✕</button></td></tr>`;
+        Object.keys(dCost).forEach(k => { 
+            const i = dCost[k], tot = (i.qty||0)*(i.harga||0); tCostCurrent += tot; 
+            cBody.innerHTML += `<tr>
+                <td class="td-edit"><input type="date" value="${i.tgl||''}" onchange="db.ref('dbCost/${k}/tgl').set(this.value)"></td>
+                <td class="td-edit"><input type="text" value="${i.jenis||''}" onchange="db.ref('dbCost/${k}/jenis').set(this.value)" style="text-align:left; padding-left:15px"></td>
+                <td class="td-edit"><input type="number" value="${i.qty||0}" onchange="db.ref('dbCost/${k}/qty').set(parseFloat(this.value)||0)"></td>
+                <td class="td-edit"><input type="text" value="${i.satuan||''}" onchange="db.ref('dbCost/${k}/satuan').set(this.value)"></td>
+                <td class="td-edit"><input type="text" value="${fmtRp(i.harga)}" onchange="db.ref('dbCost/${k}/harga').set(parseRaw(this.value))" onkeyup="formatInput(this)"></td>
+                <td style="font-weight:bold">${fmtRp(tot)}</td>
+                <td class="td-edit"><input type="text" value="${i.keterangan||''}" onchange="db.ref('dbCost/${k}/keterangan').set(this.value)"></td>
+                <td><button onclick="hapus('dbCost/${k}')">✕</button></td>
+            </tr>`; 
         });
 
-        document.getElementById('summaryStats').innerHTML = `
-            <div class="stat-card" style="background:#27ae60"><span class="label">Pemasukan Kotor</span><span class="value">${fmtRp(tkot)}</span></div>
-            <div class="stat-card" style="background:#e67e22"><span class="label">Total Transfer</span><span class="value">${fmtRp(ttra)}</span></div>
-            <div class="stat-card" style="background:#e74c3c"><span class="label">Bon Operasional</span><span class="value">${fmtRp(tkasO_Total)}</span></div>
-            <div class="stat-card" style="background:#d35400"><span class="label">Cost Barang</span><span class="value">${fmtRp(tCostCurrent)}</span></div>
-            <div class="stat-card" style="background:#2980b9; grid-column: span 2;"><span class="label">Profit Kotor (Tomy)</span><span class="value">${fmtRp(ttomCurrent)}</span></div>
-            <div class="stat-card" style="background:#c0392b; grid-column: span 2;"><span class="label">Total Bon Pekerja</span><span class="value">${fmtRp(tkasE)}</span></div>
-            <div class="stat-card" style="background:#8e44ad; grid-column: span 4; text-align:center; border: 2px solid rgba(255,255,255,0.2)">
-                <span class="label">PROFIT BERSIH (NET)</span>
-                <span class="value" style="font-size:2.5em; display:block; margin-top:5px;">${fmtRp(ttomCurrent - tCostCurrent - tkasO_Total)}</span>
-            </div>`;
+        document.getElementById('summaryStats').innerHTML = `<div class="stat-card" style="background:#27ae60"><span class="label">Pemasukan Kotor</span><span class="value">${fmtRp(tkot)}</span></div><div class="stat-card" style="background:#e67e22"><span class="label">Total Transfer</span><span class="value">${fmtRp(ttra)}</span></div><div class="stat-card" style="background:#e74c3c"><span class="label">Bon Operasional</span><span class="value">${fmtRp(tkasO_Total)}</span></div><div class="stat-card" style="background:#d35400"><span class="label">Cost Barang</span><span class="value">${fmtRp(tCostCurrent)}</span></div><div class="stat-card" style="background:#2980b9; grid-column: span 2;"><span class="label">Profit Kotor (Tomy)</span><span class="value">${fmtRp(ttomCurrent)}</span></div><div class="stat-card" style="background:#c0392b; grid-column: span 2;"><span class="label">Total Bon Pekerja</span><span class="value">${fmtRp(tkasE)}</span></div><div class="stat-card" style="background:#8e44ad; grid-column: span 4; text-align:center;"><span class="label">PROFIT BERSIH (NET)</span><span class="value" style="font-size:2.5em;">${fmtRp(ttomCurrent - tCostCurrent - tkasO_Total)}</span></div>`;
         document.getElementById('syncStatus').innerText = `📍 Terhubung (${count} Data)`;
     }
 
@@ -288,80 +375,46 @@
     function formatInputNoRp(obj) { let v = obj.value.replace(/[^0-9]/g, ''); obj.value = v ? parseInt(v).toLocaleString('id-ID') : ''; }
     
     function simpanData() { 
-        const n = document.getElementById('namaOrang').value, t = document.getElementById('tgl').value; 
-        const valKasbon = parseRaw(document.getElementById('kasbon').value);
-        if(!n || !t) return alert("Isi Nama & Tgl!"); 
-        
-        // Simpan Dashboard
-        const newRef = db.ref('earningData').push({ 
-            namaOrang: n, tgl: t, 
-            cegel: parseRaw(document.getElementById('cegel').value), 
-            rate: parseRaw(document.getElementById('rate').value), 
-            guardian: parseRaw(document.getElementById('guardian').value), 
-            makan: parseRaw(document.getElementById('makan').value), 
-            kasbon: valKasbon 
-        });
-
-        // Sync Kasbon (Kategori Operasional)
-        if (valKasbon > 0) {
-            db.ref('dbKasbon').push({
-                tgl: t,
-                nama: n,
-                kategori: "OPERASIONAL",
-                jenis: "BAYAR",
-                jumlah: valKasbon,
-                ket: "Setoran via Dashboard",
-                parentKey: newRef.key // Penanda untuk hapus otomatis
-            });
-        }
+        const n = document.getElementById('namaOrang').value, t = document.getElementById('tgl').value, valKasbon = parseRaw(document.getElementById('kasbon').value); 
+        if(!n || !t) return alert("Lengkapi data!"); 
+        const newRef = db.ref('earningData').push({ namaOrang: n, tgl: t, cegel: parseRaw(document.getElementById('cegel').value), rate: parseRaw(document.getElementById('rate').value), guardian: parseRaw(document.getElementById('guardian').value), makan: parseRaw(document.getElementById('makan').value), kasbon: valKasbon }); 
+        if(valKasbon > 0) db.ref('dbKasbon').push({ tgl: t, nama: n, kategori: "PRIBADI", jenis: "BAYAR", jumlah: valKasbon, parentKey: newRef.key }); 
         ["cegel","rate","guardian","kasbon"].forEach(id => document.getElementById(id).value = ''); 
     }
 
-    // LOGIKA HAPUS OTOMATIS
-    function hapusDashboard(key) {
-        if(confirm("Hapus data ini? (Data kasbon pembayaran terkait juga akan terhapus)")) {
-            // Hapus di earningData
-            db.ref('earningData/' + key).remove();
-            
-            // Cari dan hapus di dbKasbon yang punya parentKey sama
-            const kasData = localDB.dbKasbon || {};
-            Object.keys(kasData).forEach(k => {
-                if(kasData[k].parentKey === key) {
-                    db.ref('dbKasbon/' + k).remove();
-                }
-            });
-        }
-    }
-
-    function simpanCost() { const tgl = document.getElementById('c_tgl').value, jenis = document.getElementById('c_jenis').value; if(!tgl || !jenis) return alert("Isi Tanggal & Jenis Kebutuhan!"); db.ref('dbCost').push({ tgl: tgl, jenis: jenis, qty: parseFloat(document.getElementById('c_qty').value) || 0, satuan: document.getElementById('c_satuan').value, harga: parseRaw(document.getElementById('c_harga').value) }); ["c_jenis","c_qty","c_satuan","c_harga","c_total"].forEach(id => document.getElementById(id).value = ''); }
-    function simpanKasbonManual() { const n = document.getElementById('k_nama').value; if(!n) return alert("Pilih Nama!"); db.ref('dbKasbon').push({ tgl: document.getElementById('k_tgl').value, nama: n, kategori: document.getElementById('k_kategori').value, jenis: document.getElementById('k_jenis').value, jumlah: parseRaw(document.getElementById('k_jumlah').value), ket: document.getElementById('k_ket').value }); document.getElementById('k_jumlah').value = ''; document.getElementById('k_ket').value = ''; }
-    function hitungTotalCost() { const qty = parseFloat(document.getElementById('c_qty').value) || 0; const harga = parseRaw(document.getElementById('c_harga').value); document.getElementById('c_total').value = fmtRp(qty * harga); }
-    function upEarn(id, f, v) { db.ref('earningData/' + id).update({ [f]: v }); }
-    function upEarnNum(id, f, v) { db.ref('earningData/' + id).update({ [f]: parseRaw(v) }); }
-    function upKas(id, f, v) { db.ref('dbKasbon/' + id).update({ [f]: v }); }
-    function upKasNum(id, f, v) { db.ref('dbKasbon/' + id).update({ [f]: parseRaw(v) }); }
-    function hapus(p) { if(confirm("Hapus data ini?")) db.ref(p).remove(); }
-    function resetFilter() { document.querySelectorAll('.filter-container input, .filter-container select').forEach(i => i.value = ''); muatSemua(); }
-    function checkPin() { if(document.getElementById('pinInput').value === "1234") { localStorage.setItem("isLoggedIn", "true"); document.getElementById('loginOverlay').style.display = 'none'; } }
-    function logout() { localStorage.removeItem("isLoggedIn"); location.reload(); }
-    function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
-    function bukaKasbonPrompt() { if(prompt("Pass Kasbon:") === "tomy1234") document.getElementById('modalKasbon').style.display='block'; }
-    function openAccountWithPassword() { if(prompt("Pass Akun:") === "54321") { document.getElementById('accountModal').style.display='block'; muatDataAkun(); } }
-    function tambahPekerja() { const n = prompt("Nama Pekerja Baru:"); if(n) db.ref('daftarPekerja').push(n); }
-    function hapusPekerja() { const v = document.getElementById('namaOrang').value; if(!v) return alert("Pilih nama!"); if(confirm(`Hapus ${v}?`)) { db.ref('daftarPekerja').once('value', s => { s.forEach(c => { if(c.val() === v) c.ref.remove(); }); }); } }
-    function tambahKategori() { const n = prompt("Nama Kategori:"); if(n) db.ref('daftarKategori').push(n.toUpperCase()); }
-    function hapusKategori() { const v = document.getElementById('k_kategori').value; if(!v) return alert("Pilih kategori!"); if(confirm(`Hapus ${v}?`)) { db.ref('daftarKategori').once('value', s => { s.forEach(c => { if(c.val() === v) c.ref.remove(); }); }); } }
-    function tambahAkunBaru() { const c = prompt("Char:"); if(c) db.ref('dataAkun').push({ char: c, pekerja: '' }); }
-    function muatDataAkun() {
-        const tbody = document.getElementById('accountTableBody'); tbody.innerHTML = '';
-        const akun = localDB.dataAkun || {}; const pks = localDB.daftarPekerja ? Object.values(localDB.daftarPekerja).sort() : [];
-        Object.keys(akun).forEach(k => {
-            const d = akun[k], isUsed = (d.pekerja && d.pekerja !== "");
-            tbody.innerHTML += `<tr><td><span class="status-dot ${isUsed?'dot-green':'dot-red'}"></span> <span style="color:${isUsed?'#2ecc71':'#e74c3c'}; font-weight:bold">${isUsed?'TERPAKAI':'TERSEDIA'}</span></td><td class="td-edit"><input type="text" value="${d.char||''}" onchange="db.ref('dataAkun/${k}/char').set(this.value)"></td><td class="td-edit"><input type="text" value="${d.user||''}" onchange="db.ref('dataAkun/${k}/user').set(this.value)"></td><td class="td-edit"><input type="text" value="${d.pass||''}" onchange="db.ref('dataAkun/${k}/pass').set(this.value)"></td><td class="td-edit"><select onchange="db.ref('dataAkun/${k}/pekerja').set(this.value)"><option value=\"\">-- Kosong --</option>${pks.map(p=>`<option value="${p}" ${p===d.pekerja?'selected':''}>${p}</option>`).join('')}</select></td><td><button onclick="hapus('dataAkun/${k}')">✕</button></td></tr>`;
+    function simpanCost() { 
+        const t = document.getElementById('c_tgl').value, j = document.getElementById('c_jenis').value, k = document.getElementById('c_ket').value;
+        if(!t || !j) return alert("Tgl & Jenis Barang harus diisi!");
+        db.ref('dbCost').push({ 
+            tgl: t, 
+            jenis: j, 
+            qty: parseFloat(document.getElementById('c_qty').value)||0, 
+            satuan: document.getElementById('c_satuan').value, 
+            harga: parseRaw(document.getElementById('c_harga').value),
+            keterangan: k 
+        }).then(() => {
+            ["c_jenis","c_qty","c_satuan","c_harga","c_ket"].forEach(id => document.getElementById(id).value = '');
         });
     }
+
+    function simpanKasbonManual() { db.ref('dbKasbon').push({ tgl: document.getElementById('k_tgl').value, nama: document.getElementById('k_nama').value, kategori: document.getElementById('k_kategori').value, jenis: document.getElementById('k_jenis').value, jumlah: parseRaw(document.getElementById('k_jumlah').value), ket: document.getElementById('k_ket').value }); }
+    function upEarn(k,f,v) { db.ref(`earningData/${k}/${f}`).set(v); }
+    function upEarnNum(k,f,v) { db.ref(`earningData/${k}/${f}`).set(parseRaw(v)); }
+    function upKas(k,f,v) { db.ref(`dbKasbon/${k}/${f}`).set(v); }
+    function upKasNum(k,f,v) { db.ref(`dbKasbon/${k}/${f}`).set(parseRaw(v)); }
+    function hapus(p) { if(confirm("Hapus?")) db.ref(p).remove(); }
+    function hapusDashboard(k) { if(confirm("Hapus data dashboard ini?")) db.ref(`earningData/${k}`).remove(); }
+    function resetFilter() { document.querySelectorAll('.filter-container input, .filter-container select').forEach(i => i.value = ''); muatSemua(); }
+    function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
+    function logout() { localStorage.removeItem("isLoggedIn"); location.reload(); }
+    function checkPin() { if(document.getElementById('pinInput').value === "1234") { localStorage.setItem("isLoggedIn", "true"); document.getElementById('loginOverlay').style.display = 'none'; } }
+    function bukaKasbonPrompt() { if(prompt("Pass Kasbon:") === "tomy1234") document.getElementById('modalKasbon').style.display='block'; }
+    function openAccountWithPassword() { if(prompt("Pass Akun:") === "54321") document.getElementById('accountModal').style.display='block'; muatDataAkun(); }
+    function muatDataAkun() { const tbody = document.getElementById('accountTableBody'); tbody.innerHTML = ''; const akun = localDB.dataAkun || {}, pks = localDB.daftarPekerja ? Object.values(localDB.daftarPekerja).sort() : []; Object.keys(akun).forEach(k => { const d = akun[k], isUsed = !!d.pekerja; tbody.innerHTML += `<tr><td><span class="status-dot ${isUsed?'dot-green':'dot-red'}"></span> <b>${isUsed?'TERPAKAI':'TERSEDIA'}</b></td><td class="td-edit"><input type=\"text\" value=\"${d.char||''}\" onchange=\"db.ref('dataAkun/${k}/char').set(this.value)\"></td><td class=\"td-edit\"><input type=\"text\" value=\"${d.user||''}\" onchange=\"db.ref('dataAkun/${k}/user').set(this.value)\"></td><td class=\"td-edit\"><input type=\"text\" value=\"${d.pass||''}\" onchange=\"db.ref('dataAkun/${k}/pass').set(this.value)\"></td><td class=\"td-edit\"><select onchange=\"db.ref('dataAkun/${k}/pekerja').set(this.value)\"><option value=\"\">-- Kosong --</option>${pks.map(p=>`<option value=\"${p}\" ${p===d.pekerja?'selected':''}>${p}</option>`).join('')}</select></td><td><button onclick=\"hapus('dataAkun/${k}')\">✕</button></td></tr>`; }); }
+    function tambahPekerja() { const n = prompt("Nama:"); if(n) db.ref('daftarPekerja').push(n); }
+    function hapusPekerja() { const v = document.getElementById('namaOrang').value; if(v && confirm(`Hapus ${v}?`)) db.ref('daftarPekerja').once('value', s => { s.forEach(c => { if(c.val() === v) c.ref.remove(); }); }); }
     function exportData() { db.ref('/').once('value').then(snap => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(snap.val(),null,2)],{type:'application/json'})); a.download='Backup_Farmhouse.json'; a.click(); }); }
-    function importData(input) { const file = input.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = (e) => { const data = JSON.parse(e.target.result); if(confirm("Restore data?")) db.ref('/').set(data).then(() => alert("Ok!")); }; reader.readAsText(file); }
+    function importData(input) { const f = input.files[0]; if(!f) return; const r = new FileReader(); r.onload = (e) => { if(confirm("Restore?")) db.ref('/').set(JSON.parse(e.target.result)); }; r.readAsText(f); }
     window.onload = () => { if(localStorage.getItem("isLoggedIn") === "true") document.getElementById('loginOverlay').style.display = 'none'; const t = new Date().toISOString().split('T')[0]; document.getElementById('tgl').value = t; document.getElementById('k_tgl').value = t; document.getElementById('c_tgl').value = t; };
 </script>
 </body>
