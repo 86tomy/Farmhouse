@@ -38,7 +38,6 @@
         .dot-green { background-color: #2ecc71; box-shadow: 0 0 8px #2ecc71; }
         .dot-red { background-color: #e74c3c; box-shadow: 0 0 8px #e74c3c; }
         .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); }
-        /* Perbaikan: Lebar modal lebih fleksibel */
         .modal-content { background: var(--card); margin: 1% auto; padding: 25px; border-radius: 15px; width: 98%; max-width: 1550px; color: var(--text); max-height: 96vh; overflow-y: auto; }
         #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display:flex; justify-content:center; align-items:center; z-index:9999; }
         button { cursor: pointer; border-radius: 8px; font-weight: bold; border: none; padding: 10px 15px; }
@@ -46,7 +45,6 @@
         .vcard-user { background: linear-gradient(135deg, #2c3e50, #34495e); color: white; padding: 12px; border-radius: 12px; min-width: 160px; border-left: 5px solid #e74c3c; flex-shrink: 0; }
         .vcard-user .amt { color: #ffff00; font-weight: 800; font-size: 1.1em; }
 
-        /* Perbaikan: Grid kalender tanpa min-width besar agar pas di layar */
         .cal-grid { display: grid; grid-template-columns: repeat(31, 1fr); gap: 2px; margin-top: 5px; width: 100%; }
         .cal-day { font-size: 9px; padding: 4px 0; border-radius: 3px; color: white; text-align: center; font-weight: bold; }
         .day-active { background: #27ae60; }
@@ -266,7 +264,6 @@
         const workers = localDB.daftarPekerja ? Object.values(localDB.daftarPekerja).sort() : [];
         const earnings = localDB.earningData || {};
         const startDate = new Date(year, parseInt(month) - 1, startDay);
-        // Perbaikan: Tabel Monthly Report tanpa min-width besar
         let html = `<table style="min-width: 100%;"><thead><tr><th style="width:150px">PEKERJA</th><th>TOTAL CEGEL (SIKLUS)</th><th>HARI AKTIF</th><th>TRACKING ABSENSI & WEEKLY ACHIEVEMENT</th></tr></thead><tbody>`;
         workers.forEach(worker => {
             let totalCegel = 0, daysActive = 0, weeklyData = [0, 0, 0, 0, 0];
@@ -376,11 +373,56 @@
     function formatInput(obj) { let v = obj.value.replace(/[^0-9]/g, ''); obj.value = v ? 'Rp ' + parseInt(v).toLocaleString('id-ID') : ''; }
     function formatInputNoRp(obj) { let v = obj.value.replace(/[^0-9]/g, ''); obj.value = v ? parseInt(v).toLocaleString('id-ID') : ''; }
     
+    // FUNGSI SIMPAN DENGAN VALIDASI KASBON
     function simpanData() { 
-        const n = document.getElementById('namaOrang').value, t = document.getElementById('tgl').value, valKasbon = parseRaw(document.getElementById('kasbon').value); 
-        if(!n || !t) return alert("Lengkapi data!"); 
-        const newRef = db.ref('earningData').push({ namaOrang: n, tgl: t, cegel: parseRaw(document.getElementById('cegel').value), rate: parseRaw(document.getElementById('rate').value), guardian: parseRaw(document.getElementById('guardian').value), makan: parseRaw(document.getElementById('makan').value), kasbon: valKasbon }); 
-        if(valKasbon > 0) db.ref('dbKasbon').push({ tgl: t, nama: n, kategori: "PRIBADI", jenis: "BAYAR", jumlah: valKasbon, parentKey: newRef.key }); 
+        const n = document.getElementById('namaOrang').value;
+        const t = document.getElementById('tgl').value;
+        let valKasbon = parseRaw(document.getElementById('kasbon').value); 
+        
+        if(!n || !t) return alert("Lengkapi data Nama dan Tanggal!"); 
+
+        if(valKasbon > 0) {
+            let sisaHutang = 0;
+            const dKas = localDB.dbKasbon || {};
+            Object.values(dKas).forEach(i => {
+                if(i.nama === n) {
+                    sisaHutang += (i.jenis === 'PINJAM' ? (i.jumlah || 0) : -(i.jumlah || 0));
+                }
+            });
+
+            if(sisaHutang <= 0) {
+                alert(`⚠️ TIDAK ADA KASBON!\n${n} tidak memiliki pinjaman. Nominal kasbon diubah menjadi Rp 0.`);
+                valKasbon = 0; 
+            } else if (valKasbon > sisaHutang) {
+                alert(`⚠️ INPUT MELEBIHI HUTANG!\nSisa hutang ${n} adalah ${fmtRp(sisaHutang)}. Nilai simpan disesuaikan.`);
+                valKasbon = sisaHutang;
+            }
+        }
+
+        const newRef = db.ref('earningData').push({ 
+            namaOrang: n, 
+            tgl: t, 
+            cegel: parseRaw(document.getElementById('cegel').value), 
+            rate: parseRaw(document.getElementById('rate').value), 
+            guardian: parseRaw(document.getElementById('guardian').value), 
+            makan: parseRaw(document.getElementById('makan').value), 
+            kasbon: valKasbon 
+        }); 
+
+        if(valKasbon > 0) {
+            db.ref('dbKasbon').push({ 
+                tgl: t, 
+                nama: n, 
+                kategori: "PRIBADI", 
+                jenis: "BAYAR", 
+                jumlah: valKasbon, 
+                parentKey: newRef.key 
+            }); 
+            alert(`✅ Simpan Berhasil. Kasbon terpotong ${fmtRp(valKasbon)}.`);
+        } else {
+            alert(`✅ Simpan Berhasil.`);
+        }
+
         ["cegel","rate","guardian","kasbon"].forEach(id => document.getElementById(id).value = ''); 
     }
 
@@ -405,7 +447,23 @@
     function upKas(k,f,v) { db.ref(`dbKasbon/${k}/${f}`).set(v); }
     function upKasNum(k,f,v) { db.ref(`dbKasbon/${k}/${f}`).set(parseRaw(v)); }
     function hapus(p) { if(confirm("Hapus?")) db.ref(p).remove(); }
-    function hapusDashboard(k) { if(confirm("Hapus data dashboard ini?")) db.ref(`earningData/${k}`).remove(); }
+    
+    // FUNGSI HAPUS DENGAN SINKRONISASI KASBON
+    function hapusDashboard(k) { 
+        if(confirm("Hapus data dashboard ini?")) {
+            const dataTarget = localDB.earningData[k];
+            if (dataTarget && dataTarget.kasbon > 0) {
+                const dKas = localDB.dbKasbon || {};
+                Object.keys(dKas).forEach(keyKas => {
+                    if (dKas[keyKas].parentKey === k) {
+                        db.ref(`dbKasbon/${keyKas}`).remove();
+                    }
+                });
+            }
+            db.ref(`earningData/${k}`).remove();
+        } 
+    }
+
     function resetFilter() { document.querySelectorAll('.filter-container input, .filter-container select').forEach(i => i.value = ''); muatSemua(); }
     function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
     function logout() { localStorage.removeItem("isLoggedIn"); location.reload(); }
@@ -413,14 +471,12 @@
     function bukaKasbonPrompt() { if(prompt("Pass Kasbon:") === "tomy1234") document.getElementById('modalKasbon').style.display='block'; }
     function openAccountWithPassword() { if(prompt("Pass Akun:") === "54321") document.getElementById('accountModal').style.display='block'; muatDataAkun(); }
     
-    // PERBAIKAN: Logika status Merah/Hijau lebih ketat
     function muatDataAkun() { 
         const tbody = document.getElementById('accountTableBody'); 
         tbody.innerHTML = ''; 
         const akun = localDB.dataAkun || {}, pks = localDB.daftarPekerja ? Object.values(localDB.daftarPekerja).sort() : []; 
         Object.keys(akun).forEach(k => { 
             const d = akun[k];
-            // Cek apakah d.pekerja benar-benar ada isinya (bukan kosong, null, atau undefined)
             const isUsed = d.pekerja && d.pekerja !== ""; 
             tbody.innerHTML += `<tr>
                 <td><span class="status-dot ${isUsed ? 'dot-green' : 'dot-red'}"></span> <b>${isUsed ? 'TERPAKAI' : 'TERSEDIA'}</b></td>
@@ -428,7 +484,7 @@
                 <td class="td-edit"><input type="text" value="${d.user || ''}" onchange="db.ref('dataAkun/${k}/user').set(this.value)"></td>
                 <td class="td-edit"><input type="text" value="${d.pass || ''}" onchange="db.ref('dataAkun/${k}/pass').set(this.value)"></td>
                 <td class="td-edit"><select onchange="db.ref('dataAkun/${k}/pekerja').set(this.value || '')">
-                    <option value="">-- Kosong --</option>
+                    <option value=\"\">-- Kosong --</option>
                     ${pks.map(p => `<option value="${p}" ${p === d.pekerja ? 'selected' : ''}>${p}</option>`).join('')}
                 </select></td>
                 <td><button onclick="hapus('dataAkun/${k}')">✕</button></td>
