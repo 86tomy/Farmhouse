@@ -68,6 +68,7 @@
             <div id="syncStatus" class="sync-info">📍 Menghubungkan...</div>
         </div>
         <div style="display:flex; gap:8px; flex-wrap: wrap; justify-content: flex-end;">
+            <button style="background:#16a085; color:white" onclick="openNotesWithPassword()">📝 Notes</button>
             <button style="background:#1abc9c; color:white" onclick="openPersonalStats()">📊 Monthly Report</button>
             <button style="background:#e67e22; color:white" onclick="document.getElementById('modalCost').style.display='block'">💸 Cost</button>
             <button style="background:#e74c3c; color:white" onclick="bukaKasbonPrompt()">💰 Kasbon</button>
@@ -207,6 +208,25 @@
 
 <div id="modalKasbon" class="modal"><div class="modal-content"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;"><h2 style="color:#e74c3c; margin:0;">💰 MANAJEMEN KASBON</h2><button onclick="document.getElementById('modalKasbon').style.display='none'" style="background:#333; color:white;">✕</button></div><div id="vcardOps" class="vcard-scroll" style="margin-bottom:20px"></div><div class="input-section" style="border-top: 6px solid #e74c3c;"><div class="input-group"><label>TGL</label><input type="date" id="k_tgl"></div><div class="input-group"><label>NAMA</label><select id="k_nama"></select></div><div class="input-group"><label>KATEGORI</label><div style="display: flex; gap: 5px;"><select id="k_kategori"></select><button onclick="tambahKategori()" style="background:#3498db; color:white;">+</button><button onclick="hapusKategori()" style="background:#e74c3c; color:white;">-</button></div></div><div class="input-group"><label>JENIS</label><select id="k_jenis"><option value="PINJAM">PINJAM</option><option value="BAYAR">BAYAR</option></select></div><div class="input-group"><label>JUMLAH</label><input type="text" id="k_jumlah" onkeyup="formatInput(this)"></div><div class="input-group" style="grid-column: span 2;"><label>KETERANGAN</label><input type="text" id="k_ket"></div><button style="background:#e74c3c; color:white;" onclick="simpanKasbonManual()">SIMPAN</button></div><div class="table-container"><table><thead><tr style="background:#2c3e50; color:#fff"><th>TGL</th><th>NAMA</th><th>KATEGORI</th><th>JENIS</th><th>JUMLAH</th><th>KET</th><th>X</th></tr></thead><tbody id="kasbonTableBody"></tbody></table></div></div></div>
 <div id="accountModal" class="modal"><div class="modal-content"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;"><h2 style="margin:0; color:#9b59b6">🔑 Akun Game Sync</h2><div><button onclick="tambahAkunBaru()" style="background:#3498db; color:white;">+ CHAR</button><button onclick="document.getElementById('accountModal').style.display='none'" style="background:#e74c3c; color:white; margin-left:10px;">✕</button></div></div><div class="table-container"><table><thead><tr><th>STATUS</th><th>CHAR</th><th>USER ID</th><th>PASS</th><th>PEKERJA</th><th>X</th></tr></thead><tbody id="accountTableBody"></tbody></table></div></div></div>
+
+<div id="notesModal" class="modal">
+    <div class="modal-content" style="max-width: 700px; min-height: 80vh; background: #fffceb; color: #333; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #d4af37; padding-bottom: 10px; margin-bottom: 15px;">
+            <h2 style="margin:0; color:#b8860b; font-family: 'Georgia', serif;">📜 FARM NOTES (B5)</h2>
+            <button onclick="document.getElementById('notesModal').style.display='none'" style="background:#e74c3c; color:white;">✕</button>
+        </div>
+        <textarea id="notesArea" 
+            style="width: 100%; height: 65vh; border: none; background: transparent; 
+            line-height: 25px; padding: 0 10px; font-family: 'Courier New', Courier, monospace;
+            background-image: linear-gradient(#d1d1d1 1px, transparent 1px);
+            background-size: 100% 25px; outline: none; resize: none; font-size: 1.1em; color: #2c3e50;"
+            placeholder="Ketik catatan penting di sini..."
+            oninput="saveNotes()"></textarea>
+        <div style="font-size: 0.8em; color: #888; margin-top: 15px; text-align: right; font-style: italic; border-top: 1px dashed #d4af37; padding-top: 5px;">
+            Awan Sync Aktif • Penyimpanan Otomatis
+        </div>
+    </div>
+</div>
 
 <script>
     const firebaseConfig = {
@@ -373,7 +393,6 @@
     function formatInput(obj) { let v = obj.value.replace(/[^0-9]/g, ''); obj.value = v ? 'Rp ' + parseInt(v).toLocaleString('id-ID') : ''; }
     function formatInputNoRp(obj) { let v = obj.value.replace(/[^0-9]/g, ''); obj.value = v ? parseInt(v).toLocaleString('id-ID') : ''; }
     
-    // FUNGSI SIMPAN DENGAN VALIDASI KASBON
     function simpanData() { 
         const n = document.getElementById('namaOrang').value;
         const t = document.getElementById('tgl').value;
@@ -448,7 +467,6 @@
     function upKasNum(k,f,v) { db.ref(`dbKasbon/${k}/${f}`).set(parseRaw(v)); }
     function hapus(p) { if(confirm("Hapus?")) db.ref(p).remove(); }
     
-    // FUNGSI HAPUS DENGAN SINKRONISASI KASBON
     function hapusDashboard(k) { 
         if(confirm("Hapus data dashboard ini?")) {
             const dataTarget = localDB.earningData[k];
@@ -462,6 +480,25 @@
             }
             db.ref(`earningData/${k}`).remove();
         } 
+    }
+
+    // FUNGSI NOTES BARU
+    function openNotesWithPassword() {
+        if(prompt("Pass Notes:") === "tomy1234") {
+            document.getElementById('notesModal').style.display = 'block';
+            loadNotes();
+        }
+    }
+    function saveNotes() {
+        const text = document.getElementById('notesArea').value;
+        db.ref('appNotes').set(text);
+    }
+    function loadNotes() {
+        db.ref('appNotes').once('value', (snap) => {
+            if(snap.exists()) {
+                document.getElementById('notesArea').value = snap.val();
+            }
+        });
     }
 
     function resetFilter() { document.querySelectorAll('.filter-container input, .filter-container select').forEach(i => i.value = ''); muatSemua(); }
