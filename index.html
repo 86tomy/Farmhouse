@@ -70,6 +70,7 @@
         <div style="display:flex; gap:8px; flex-wrap: wrap; justify-content: flex-end;">
             <button style="background:#16a085; color:white" onclick="openNotesWithPassword()">📝 Notes</button>
             <button style="background:#1abc9c; color:white" onclick="openPersonalStats()">📊 Monthly Report</button>
+            <button style="background:#d35400; color:white" onclick="openCashModal()">💎 Top Up Cash</button>
             <button style="background:#e67e22; color:white" onclick="document.getElementById('modalCost').style.display='block'">💸 Cost</button>
             <button style="background:#e74c3c; color:white" onclick="bukaKasbonPrompt()">💰 Kasbon</button>
             <button style="background:#9b59b6; color:white" onclick="openAccountWithPassword()">🔑 Akun Game</button>
@@ -228,6 +229,41 @@
     </div>
 </div>
 
+<div id="modalCash" class="modal">
+    <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 style="color:#d35400; margin:0;">💎 HISTORI TOP UP CASH</h2>
+            <button onclick="document.getElementById('modalCash').style.display='none'" style="background:#333; color:white;">✕</button>
+        </div>
+        <div class="input-section" style="border-top: 6px solid #d35400;">
+            <div class="input-group"><label>TANGGAL</label><input type="date" id="cash_tgl"></div>
+            <div class="input-group">
+                <label>PILIH KARAKTER</label>
+                <select id="cash_char"></select>
+            </div>
+            <div class="input-group"><label>JUMLAH CASH</label><input type="text" id="cash_amount" placeholder="Contoh: 10.000 Cash"></div>
+            <div class="input-group"><label>BIAYA (IDR)</label><input type="text" id="cash_price" onkeyup="formatInput(this)"></div>
+            <div class="input-group" style="grid-column: span 2;"><label>KETERANGAN</label><input type="text" id="cash_ket" placeholder="Via apa / Untuk apa..."></div>
+            <button style="background:#d35400; color:white;" onclick="simpanCash()">SIMPAN TOPUP</button>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr style="background:#2c3e50; color:#fff">
+                        <th>TANGGAL</th>
+                        <th>KARAKTER</th>
+                        <th>JUMLAH CASH</th>
+                        <th>BIAYA (IDR)</th>
+                        <th>KETERANGAN</th>
+                        <th>X</th>
+                    </tr>
+                </thead>
+                <tbody id="cashTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <script>
     const firebaseConfig = {
         apiKey: "AIzaSyBphHlavM7eC56wLJ1CUcSi4-yc5YwLcl0",
@@ -331,6 +367,18 @@
             pks.forEach(p => el.innerHTML += `<option value="${p}">${p}</option>`);
             el.value = cur;
         });
+
+        // Update list karakter di modal cash
+        const cashSel = document.getElementById('cash_char');
+        if(cashSel) {
+            const curC = cashSel.value; cashSel.innerHTML = '<option value="">-- Pilih Karakter --</option>';
+            const akun = localDB.dataAkun || {};
+            Object.values(akun).forEach(a => {
+                if(a.char) cashSel.innerHTML += `<option value="${a.char}">${a.char}</option>`;
+            });
+            cashSel.value = curC;
+        }
+
         const kats = localDB.daftarKategori ? Object.values(localDB.daftarKategori).sort() : ["PRIBADI", "OPERASIONAL"];
         const kSel = document.getElementById('k_kategori');
         if(kSel){
@@ -346,6 +394,7 @@
         const cBody = document.getElementById('costTableBody'); cBody.innerHTML = '';
         const kBody = document.getElementById('kasbonTableBody'); kBody.innerHTML = '';
         const vOps = document.getElementById('vcardOps'); vOps.innerHTML = '';
+        const cashBody = document.getElementById('cashTableBody'); if(cashBody) cashBody.innerHTML = '';
         const pks = localDB.daftarPekerja ? Object.values(localDB.daftarPekerja).sort() : [];
         const kats = localDB.daftarKategori ? Object.values(localDB.daftarKategori).sort() : ["PRIBADI", "OPERASIONAL"];
         
@@ -382,6 +431,20 @@
                 <td class="td-edit"><input type="text" value="${i.keterangan||''}" onchange="db.ref('dbCost/${k}/keterangan').set(this.value)"></td>
                 <td><button onclick="hapus('dbCost/${k}')">✕</button></td>
             </tr>`; 
+        });
+
+        // Muat Data Cash
+        const dCash = localDB.dbCashTopup || {};
+        Object.keys(dCash).reverse().forEach(k => {
+            const i = dCash[k];
+            cashBody.innerHTML += `<tr>
+                <td class="td-edit"><input type="date" value="${i.tgl}" onchange="db.ref('dbCashTopup/${k}/tgl').set(this.value)"></td>
+                <td><b>${i.char}</b></td>
+                <td class="td-edit"><input type="text" value="${i.amount}" onchange="db.ref('dbCashTopup/${k}/amount').set(this.value)"></td>
+                <td class="td-edit"><input type="text" value="${fmtRp(i.price)}" onchange="db.ref('dbCashTopup/${k}/price').set(parseRaw(this.value))" onkeyup="formatInput(this)"></td>
+                <td class="td-edit"><input type="text" value="${i.ket}" onchange="db.ref('dbCashTopup/${k}/ket').set(this.value)"></td>
+                <td><button onclick="hapus('dbCashTopup/${k}')">✕</button></td>
+            </tr>`;
         });
 
         document.getElementById('summaryStats').innerHTML = `<div class="stat-card" style="background:#27ae60"><span class="label">Pemasukan Kotor</span><span class="value">${fmtRp(tkot)}</span></div><div class="stat-card" style="background:#e67e22"><span class="label">Total Transfer</span><span class="value">${fmtRp(ttra)}</span></div><div class="stat-card" style="background:#e74c3c"><span class="label">Bon Operasional</span><span class="value">${fmtRp(tkasO_Total)}</span></div><div class="stat-card" style="background:#d35400"><span class="label">Cost Barang</span><span class="value">${fmtRp(tCostCurrent)}</span></div><div class="stat-card" style="background:#2980b9; grid-column: span 2;"><span class="label">Profit Kotor (Tomy)</span><span class="value">${fmtRp(ttomCurrent)}</span></div><div class="stat-card" style="background:#c0392b; grid-column: span 2;"><span class="label">Total Bon Pekerja</span><span class="value">${fmtRp(tkasE)}</span></div><div class="stat-card" style="background:#8e44ad; grid-column: span 4; text-align:center;"><span class="label">PROFIT BERSIH (NET)</span><span class="value" style="font-size:2.5em;">${fmtRp(ttomCurrent - tCostCurrent - tkasO_Total)}</span></div>`;
@@ -460,6 +523,17 @@
         });
     }
 
+    function simpanCash() {
+        const t = document.getElementById('cash_tgl').value, c = document.getElementById('cash_char').value, a = document.getElementById('cash_amount').value, p = parseRaw(document.getElementById('cash_price').value);
+        if(!t || !c || !a) return alert("Lengkapi data Top Up!");
+        db.ref('dbCashTopup').push({
+            tgl: t, char: c, amount: a, price: p, ket: document.getElementById('cash_ket').value
+        }).then(() => {
+            ["cash_char", "cash_amount", "cash_price", "cash_ket"].forEach(id => document.getElementById(id).value = '');
+            alert("Berhasil mencatat Top Up.");
+        });
+    }
+
     function simpanKasbonManual() { db.ref('dbKasbon').push({ tgl: document.getElementById('k_tgl').value, nama: document.getElementById('k_nama').value, kategori: document.getElementById('k_kategori').value, jenis: document.getElementById('k_jenis').value, jumlah: parseRaw(document.getElementById('k_jumlah').value), ket: document.getElementById('k_ket').value }); }
     function upEarn(k,f,v) { db.ref(`earningData/${k}/${f}`).set(v); }
     function upEarnNum(k,f,v) { db.ref(`earningData/${k}/${f}`).set(parseRaw(v)); }
@@ -482,7 +556,6 @@
         } 
     }
 
-    // FUNGSI NOTES BARU
     function openNotesWithPassword() {
         if(prompt("Pass Notes:") === "tomy1234") {
             document.getElementById('notesModal').style.display = 'block';
@@ -507,6 +580,7 @@
     function checkPin() { if(document.getElementById('pinInput').value === "1234") { localStorage.setItem("isLoggedIn", "true"); document.getElementById('loginOverlay').style.display = 'none'; } }
     function bukaKasbonPrompt() { if(prompt("Pass Kasbon:") === "tomy1234") document.getElementById('modalKasbon').style.display='block'; }
     function openAccountWithPassword() { if(prompt("Pass Akun:") === "54321") document.getElementById('accountModal').style.display='block'; muatDataAkun(); }
+    function openCashModal() { if(prompt("Pass TopUp:") === "tomy1234") document.getElementById('modalCash').style.display='block'; }
     
     function muatDataAkun() { 
         const tbody = document.getElementById('accountTableBody'); 
@@ -529,11 +603,12 @@
         }); 
     }
 
+    function tambahAkunBaru() { db.ref('dataAkun').push({ char: 'Baru', user: '', pass: '', pekerja: '' }); }
     function tambahPekerja() { const n = prompt("Nama:"); if(n) db.ref('daftarPekerja').push(n); }
     function hapusPekerja() { const v = document.getElementById('namaOrang').value; if(v && confirm(`Hapus ${v}?`)) db.ref('daftarPekerja').once('value', s => { s.forEach(c => { if(c.val() === v) c.ref.remove(); }); }); }
     function exportData() { db.ref('/').once('value').then(snap => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(snap.val(),null,2)],{type:'application/json'})); a.download='Backup_Farmhouse.json'; a.click(); }); }
     function importData(input) { const f = input.files[0]; if(!f) return; const r = new FileReader(); r.onload = (e) => { if(confirm("Restore?")) db.ref('/').set(JSON.parse(e.target.result)); }; r.readAsText(f); }
-    window.onload = () => { if(localStorage.getItem("isLoggedIn") === "true") document.getElementById('loginOverlay').style.display = 'none'; const t = new Date().toISOString().split('T')[0]; document.getElementById('tgl').value = t; document.getElementById('k_tgl').value = t; document.getElementById('c_tgl').value = t; };
+    window.onload = () => { if(localStorage.getItem("isLoggedIn") === "true") document.getElementById('loginOverlay').style.display = 'none'; const t = new Date().toISOString().split('T')[0]; document.getElementById('tgl').value = t; document.getElementById('k_tgl').value = t; document.getElementById('c_tgl').value = t; document.getElementById('cash_tgl').value = t; };
 </script>
 </body>
 </html>
