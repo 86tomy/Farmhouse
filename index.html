@@ -49,6 +49,15 @@
         .cal-day { font-size: 9px; padding: 4px 0; border-radius: 3px; color: white; text-align: center; font-weight: bold; }
         .day-active { background: #27ae60; }
         .day-missing { background: #e74c3c; opacity: 0.3; }
+
+        /* Style Baru untuk Kalender Target */
+        .cal-target-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; background: var(--border); padding: 10px; border-radius: 8px; }
+        .cal-target-day { background: var(--card); min-height: 90px; padding: 10px; border-radius: 5px; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; }
+        .cal-target-date { font-weight: bold; font-size: 1.1em; color: var(--text); }
+        .total-info { font-size: 0.85em; margin-top: 5px; }
+        .status-lunas { color: #27ae60; font-weight: bold; font-size: 0.8em; margin-top: 4px; }
+        .status-minus { color: #e74c3c; font-weight: bold; font-size: 0.8em; margin-top: 4px; }
+        .day-header { text-align: center; font-weight: bold; padding: 10px; color: var(--primary); font-size: 0.9em; background: var(--card); border-radius: 5px; }
     </style>
 </head>
 <body class="dark-mode">
@@ -68,6 +77,7 @@
             <div id="syncStatus" class="sync-info">📍 Menghubungkan...</div>
         </div>
         <div style="display:flex; gap:8px; flex-wrap: wrap; justify-content: flex-end;">
+            <button style="background:#2ecc71; color:white" onclick="openTargetReport()">🎯 Target Setoran</button>
             <button style="background:#16a085; color:white" onclick="openNotesWithPassword()">📝 Notes</button>
             <button style="background:#1abc9c; color:white" onclick="openPersonalStats()">📊 Monthly Report</button>
             <button style="background:#d35400; color:white" onclick="openCashModal()">💎 Top Up Cash</button>
@@ -131,6 +141,27 @@
             </thead>
             <tbody id="tableBody"></tbody>
         </table>
+    </div>
+</div>
+
+<div id="modalTargetReport" class="modal">
+    <div class="modal-content" style="max-width: 1000px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 style="color:#2ecc71; margin:0;">🗓️ TOTAL SETORAN VS TARGET (Rp 271.000/Hari)</h2>
+            <button onclick="document.getElementById('modalTargetReport').style.display='none'" style="background:#333; color:white;">✕</button>
+        </div>
+        <div class="filter-container" style="background: #2c3e50; margin-bottom: 15px; border-bottom: none; border-radius: 12px;">
+            <div class="filter-group">
+                <label style="color:white">PILIH BULAN</label>
+                <select id="targetMonth" onchange="generateTargetReport()">
+                    <option value="01">Januari</option><option value="02">Februari</option><option value="03">Maret</option>
+                    <option value="04">April</option><option value="05">Mei</option><option value="06">Juni</option>
+                    <option value="07">Juli</option><option value="08">Agustus</option><option value="09">September</option>
+                    <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+                </select>
+            </div>
+        </div>
+        <div id="targetCalendarOutput"></div>
     </div>
 </div>
 
@@ -359,6 +390,53 @@
         document.getElementById('monthlyReportOutput').innerHTML = html + `</tbody></table>`;
     }
 
+    // Fungsi Target Report (Kalender) Baru
+    function openTargetReport() {
+        const now = new Date();
+        document.getElementById('targetMonth').value = String(now.getMonth() + 1).padStart(2, '0');
+        document.getElementById('modalTargetReport').style.display = 'block';
+        generateTargetReport();
+    }
+
+    function generateTargetReport() {
+        const month = document.getElementById('targetMonth').value;
+        const year = new Date().getFullYear();
+        const targetHarian = 271000;
+        const earnings = localDB.earningData || {};
+        const firstDay = new Date(year, parseInt(month) - 1, 1).getDay();
+        const daysInMonth = new Date(year, parseInt(month), 0).getDate();
+        let html = `<div class="cal-target-grid">`;
+        ['MINGGU', 'SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT', 'SABTU'].forEach(d => html += `<div class="day-header">${d}</div>`);
+        for (let i = 0; i < firstDay; i++) { html += `<div class="cal-target-day" style="opacity:0; border:none;"></div>`; }
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${year}-${month}-${String(day).padStart(2, '0')}`;
+            let totalTomyHariIni = 0, dataExist = false;
+            Object.values(earnings).forEach(d => {
+                if (d.tgl === dateStr) {
+                    dataExist = true;
+                    let kotor = ((d.cegel || 0) / 1000000) * (d.rate || 0);
+                    let hTom = ((kotor - (d.guardian || 0)) / 2) - (d.makan || 0);
+                    totalTomyHariIni += hTom;
+                }
+            });
+            let selisih = totalTomyHariIni - targetHarian;
+            html += `<div class="cal-target-day">
+                <span class="cal-target-date">${day}</span>
+                <div class="total-info">
+                    ${dataExist ? `
+                        <small>Total Tomy:</small><br>
+                        <b>${fmtRp(totalTomyHariIni)}</b><br>
+                        ${selisih < 0 
+                            ? `<span class="status-minus">Kurang: ${fmtRp(Math.abs(selisih))}</span>` 
+                            : `<span class="status-lunas">✓ TARGET OK</span>`}
+                    ` : `<i style="color:#999; font-size:0.7em;">No Data</i>`}
+                </div>
+            </div>`;
+        }
+        html += `</div>`;
+        document.getElementById('targetCalendarOutput').innerHTML = html;
+    }
+
     function updateSelects() {
         const pks = localDB.daftarPekerja ? Object.values(localDB.daftarPekerja).sort() : [];
         ['namaOrang', 'k_nama'].forEach(id => {
@@ -368,7 +446,6 @@
             el.value = cur;
         });
 
-        // Update list karakter di modal cash
         const cashSel = document.getElementById('cash_char');
         if(cashSel) {
             const curC = cashSel.value; cashSel.innerHTML = '<option value="">-- Pilih Karakter --</option>';
@@ -433,7 +510,6 @@
             </tr>`; 
         });
 
-        // Muat Data Cash
         const dCash = localDB.dbCashTopup || {};
         Object.keys(dCash).reverse().forEach(k => {
             const i = dCash[k];
@@ -457,81 +533,30 @@
     function formatInputNoRp(obj) { let v = obj.value.replace(/[^0-9]/g, ''); obj.value = v ? parseInt(v).toLocaleString('id-ID') : ''; }
     
     function simpanData() { 
-        const n = document.getElementById('namaOrang').value;
-        const t = document.getElementById('tgl').value;
+        const n = document.getElementById('namaOrang').value, t = document.getElementById('tgl').value;
         let valKasbon = parseRaw(document.getElementById('kasbon').value); 
-        
         if(!n || !t) return alert("Lengkapi data Nama dan Tanggal!"); 
-
         if(valKasbon > 0) {
-            let sisaHutang = 0;
-            const dKas = localDB.dbKasbon || {};
-            Object.values(dKas).forEach(i => {
-                if(i.nama === n) {
-                    sisaHutang += (i.jenis === 'PINJAM' ? (i.jumlah || 0) : -(i.jumlah || 0));
-                }
-            });
-
-            if(sisaHutang <= 0) {
-                alert(`⚠️ TIDAK ADA KASBON!\n${n} tidak memiliki pinjaman. Nominal kasbon diubah menjadi Rp 0.`);
-                valKasbon = 0; 
-            } else if (valKasbon > sisaHutang) {
-                alert(`⚠️ INPUT MELEBIHI HUTANG!\nSisa hutang ${n} adalah ${fmtRp(sisaHutang)}. Nilai simpan disesuaikan.`);
-                valKasbon = sisaHutang;
-            }
+            let sisaHutang = 0; const dKas = localDB.dbKasbon || {};
+            Object.values(dKas).forEach(i => { if(i.nama === n) { sisaHutang += (i.jenis === 'PINJAM' ? (i.jumlah || 0) : -(i.jumlah || 0)); } });
+            if(sisaHutang <= 0) { alert(`⚠️ TIDAK ADA KASBON!\n${n} tidak memiliki pinjaman. Nominal kasbon diubah menjadi Rp 0.`); valKasbon = 0; } 
+            else if (valKasbon > sisaHutang) { alert(`⚠️ INPUT MELEBIHI HUTANG!\nSisa hutang ${n} adalah ${fmtRp(sisaHutang)}. Nilai simpan disesuaikan.`); valKasbon = sisaHutang; }
         }
-
-        const newRef = db.ref('earningData').push({ 
-            namaOrang: n, 
-            tgl: t, 
-            cegel: parseRaw(document.getElementById('cegel').value), 
-            rate: parseRaw(document.getElementById('rate').value), 
-            guardian: parseRaw(document.getElementById('guardian').value), 
-            makan: parseRaw(document.getElementById('makan').value), 
-            kasbon: valKasbon 
-        }); 
-
-        if(valKasbon > 0) {
-            db.ref('dbKasbon').push({ 
-                tgl: t, 
-                nama: n, 
-                kategori: "PRIBADI", 
-                jenis: "BAYAR", 
-                jumlah: valKasbon, 
-                parentKey: newRef.key 
-            }); 
-            alert(`✅ Simpan Berhasil. Kasbon terpotong ${fmtRp(valKasbon)}.`);
-        } else {
-            alert(`✅ Simpan Berhasil.`);
-        }
-
+        const newRef = db.ref('earningData').push({ namaOrang: n, tgl: t, cegel: parseRaw(document.getElementById('cegel').value), rate: parseRaw(document.getElementById('rate').value), guardian: parseRaw(document.getElementById('guardian').value), makan: parseRaw(document.getElementById('makan').value), kasbon: valKasbon }); 
+        if(valKasbon > 0) { db.ref('dbKasbon').push({ tgl: t, nama: n, kategori: "PRIBADI", jenis: "BAYAR", jumlah: valKasbon, parentKey: newRef.key }); alert(`✅ Simpan Berhasil. Kasbon terpotong ${fmtRp(valKasbon)}.`); } else { alert(`✅ Simpan Berhasil.`); }
         ["cegel","rate","guardian","kasbon"].forEach(id => document.getElementById(id).value = ''); 
     }
 
     function simpanCost() { 
         const t = document.getElementById('c_tgl').value, j = document.getElementById('c_jenis').value, k = document.getElementById('c_ket').value;
         if(!t || !j) return alert("Tgl & Jenis Barang harus diisi!");
-        db.ref('dbCost').push({ 
-            tgl: t, 
-            jenis: j, 
-            qty: parseFloat(document.getElementById('c_qty').value)||0, 
-            satuan: document.getElementById('c_satuan').value, 
-            harga: parseRaw(document.getElementById('c_harga').value),
-            keterangan: k 
-        }).then(() => {
-            ["c_jenis","c_qty","c_satuan","c_harga","c_ket"].forEach(id => document.getElementById(id).value = '');
-        });
+        db.ref('dbCost').push({ tgl: t, jenis: j, qty: parseFloat(document.getElementById('c_qty').value)||0, satuan: document.getElementById('c_satuan').value, harga: parseRaw(document.getElementById('c_harga').value), keterangan: k }).then(() => { ["c_jenis","c_qty","c_satuan","c_harga","c_ket"].forEach(id => document.getElementById(id).value = ''); });
     }
 
     function simpanCash() {
         const t = document.getElementById('cash_tgl').value, c = document.getElementById('cash_char').value, a = document.getElementById('cash_amount').value, p = parseRaw(document.getElementById('cash_price').value);
         if(!t || !c || !a) return alert("Lengkapi data Top Up!");
-        db.ref('dbCashTopup').push({
-            tgl: t, char: c, amount: a, price: p, ket: document.getElementById('cash_ket').value
-        }).then(() => {
-            ["cash_char", "cash_amount", "cash_price", "cash_ket"].forEach(id => document.getElementById(id).value = '');
-            alert("Berhasil mencatat Top Up.");
-        });
+        db.ref('dbCashTopup').push({ tgl: t, char: c, amount: a, price: p, ket: document.getElementById('cash_ket').value }).then(() => { ["cash_char", "cash_amount", "cash_price", "cash_ket"].forEach(id => document.getElementById(id).value = ''); alert("Berhasil mencatat Top Up."); });
     }
 
     function simpanKasbonManual() { db.ref('dbKasbon').push({ tgl: document.getElementById('k_tgl').value, nama: document.getElementById('k_nama').value, kategori: document.getElementById('k_kategori').value, jenis: document.getElementById('k_jenis').value, jumlah: parseRaw(document.getElementById('k_jumlah').value), ket: document.getElementById('k_ket').value }); }
@@ -544,36 +569,14 @@
     function hapusDashboard(k) { 
         if(confirm("Hapus data dashboard ini?")) {
             const dataTarget = localDB.earningData[k];
-            if (dataTarget && dataTarget.kasbon > 0) {
-                const dKas = localDB.dbKasbon || {};
-                Object.keys(dKas).forEach(keyKas => {
-                    if (dKas[keyKas].parentKey === k) {
-                        db.ref(`dbKasbon/${keyKas}`).remove();
-                    }
-                });
-            }
+            if (dataTarget && dataTarget.kasbon > 0) { const dKas = localDB.dbKasbon || {}; Object.keys(dKas).forEach(keyKas => { if (dKas[keyKas].parentKey === k) { db.ref(`dbKasbon/${keyKas}`).remove(); } }); }
             db.ref(`earningData/${k}`).remove();
         } 
     }
 
-    function openNotesWithPassword() {
-        if(prompt("Pass Notes:") === "tomy1234") {
-            document.getElementById('notesModal').style.display = 'block';
-            loadNotes();
-        }
-    }
-    function saveNotes() {
-        const text = document.getElementById('notesArea').value;
-        db.ref('appNotes').set(text);
-    }
-    function loadNotes() {
-        db.ref('appNotes').once('value', (snap) => {
-            if(snap.exists()) {
-                document.getElementById('notesArea').value = snap.val();
-            }
-        });
-    }
-
+    function openNotesWithPassword() { if(prompt("Pass Notes:") === "tomy1234") { document.getElementById('notesModal').style.display = 'block'; loadNotes(); } }
+    function saveNotes() { const text = document.getElementById('notesArea').value; db.ref('appNotes').set(text); }
+    function loadNotes() { db.ref('appNotes').once('value', (snap) => { if(snap.exists()) { document.getElementById('notesArea').value = snap.val(); } }); }
     function resetFilter() { document.querySelectorAll('.filter-container input, .filter-container select').forEach(i => i.value = ''); muatSemua(); }
     function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
     function logout() { localStorage.removeItem("isLoggedIn"); location.reload(); }
@@ -583,26 +586,13 @@
     function openCashModal() { if(prompt("Pass TopUp:") === "tomy1234") document.getElementById('modalCash').style.display='block'; }
     
     function muatDataAkun() { 
-        const tbody = document.getElementById('accountTableBody'); 
-        tbody.innerHTML = ''; 
+        const tbody = document.getElementById('accountTableBody'); tbody.innerHTML = ''; 
         const akun = localDB.dataAkun || {}, pks = localDB.daftarPekerja ? Object.values(localDB.daftarPekerja).sort() : []; 
         Object.keys(akun).forEach(k => { 
-            const d = akun[k];
-            const isUsed = d.pekerja && d.pekerja !== ""; 
-            tbody.innerHTML += `<tr>
-                <td><span class="status-dot ${isUsed ? 'dot-green' : 'dot-red'}"></span> <b>${isUsed ? 'TERPAKAI' : 'TERSEDIA'}</b></td>
-                <td class="td-edit"><input type="text" value="${d.char || ''}" onchange="db.ref('dataAkun/${k}/char').set(this.value)"></td>
-                <td class="td-edit"><input type="text" value="${d.user || ''}" onchange="db.ref('dataAkun/${k}/user').set(this.value)"></td>
-                <td class="td-edit"><input type="text" value="${d.pass || ''}" onchange="db.ref('dataAkun/${k}/pass').set(this.value)"></td>
-                <td class="td-edit"><select onchange="db.ref('dataAkun/${k}/pekerja').set(this.value || '')">
-                    <option value=\"\">-- Kosong --</option>
-                    ${pks.map(p => `<option value="${p}" ${p === d.pekerja ? 'selected' : ''}>${p}</option>`).join('')}
-                </select></td>
-                <td><button onclick="hapus('dataAkun/${k}')">✕</button></td>
-            </tr>`; 
+            const d = akun[k], isUsed = d.pekerja && d.pekerja !== ""; 
+            tbody.innerHTML += `<tr><td><span class="status-dot ${isUsed ? 'dot-green' : 'dot-red'}"></span> <b>${isUsed ? 'TERPAKAI' : 'TERSEDIA'}</b></td><td class="td-edit"><input type="text" value="${d.char || ''}" onchange="db.ref('dataAkun/${k}/char').set(this.value)"></td><td class="td-edit"><input type="text" value="${d.user || ''}" onchange="db.ref('dataAkun/${k}/user').set(this.value)"></td><td class="td-edit"><input type="text" value="${d.pass || ''}" onchange="db.ref('dataAkun/${k}/pass').set(this.value)"></td><td class="td-edit"><select onchange="db.ref('dataAkun/${k}/pekerja').set(this.value || '')"><option value=\"\">-- Kosong --</option>${pks.map(p => `<option value="${p}" ${p === d.pekerja ? 'selected' : ''}>${p}</option>`).join('')}</select></td><td><button onclick=\"hapus('dataAkun/${k}')\">✕</button></td></tr>`; 
         }); 
     }
-
     function tambahAkunBaru() { db.ref('dataAkun').push({ char: 'Baru', user: '', pass: '', pekerja: '' }); }
     function tambahPekerja() { const n = prompt("Nama:"); if(n) db.ref('daftarPekerja').push(n); }
     function hapusPekerja() { const v = document.getElementById('namaOrang').value; if(v && confirm(`Hapus ${v}?`)) db.ref('daftarPekerja').once('value', s => { s.forEach(c => { if(c.val() === v) c.ref.remove(); }); }); }
