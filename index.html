@@ -50,7 +50,6 @@
         .day-active { background: #27ae60; }
         .day-missing { background: #e74c3c; opacity: 0.3; }
 
-        /* Style Baru untuk Kalender Target */
         .cal-target-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; background: var(--border); padding: 10px; border-radius: 8px; }
         .cal-target-day { background: var(--card); min-height: 90px; padding: 10px; border-radius: 5px; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; }
         .cal-target-date { font-weight: bold; font-size: 1.1em; color: var(--text); }
@@ -147,10 +146,10 @@
 <div id="modalTargetReport" class="modal">
     <div class="modal-content" style="max-width: 1000px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h2 style="color:#2ecc71; margin:0;">🗓️ TOTAL SETORAN VS TARGET (Rp 271.000/Hari)</h2>
+            <h2 style="color:#2ecc71; margin:0;">🗓️ TOTAL SETORAN VS TARGET</h2>
             <button onclick="document.getElementById('modalTargetReport').style.display='none'" style="background:#333; color:white;">✕</button>
         </div>
-        <div class="filter-container" style="background: #2c3e50; margin-bottom: 15px; border-bottom: none; border-radius: 12px;">
+        <div class="filter-container" style="background: #2c3e50; margin-bottom: 15px; border-bottom: none; border-radius: 12px; display: flex; align-items: center; gap: 20px;">
             <div class="filter-group">
                 <label style="color:white">PILIH BULAN</label>
                 <select id="targetMonth" onchange="generateTargetReport()">
@@ -159,6 +158,14 @@
                     <option value="07">Juli</option><option value="08">Agustus</option><option value="09">September</option>
                     <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
                 </select>
+            </div>
+            <div class="filter-group">
+                <label style="color:#2ecc71; font-weight: bold;">TARGET HARIAN (IDR)</label>
+                <div style="display: flex; gap: 5px; align-items: center;">
+                    <input type="text" id="targetNominalInput" onkeyup="formatInput(this)" 
+                        style="width: 150px; text-align: center; border: 2px solid #2ecc71; color: white; background: rgba(0,0,0,0.3);">
+                    <button onclick="saveTargetNominal()" style="background:#2ecc71; color:#fff; padding: 10px 15px;">SET</button>
+                </div>
             </div>
         </div>
         <div id="targetCalendarOutput"></div>
@@ -390,7 +397,7 @@
         document.getElementById('monthlyReportOutput').innerHTML = html + `</tbody></table>`;
     }
 
-    // Fungsi Target Report (Kalender) Baru
+    // MODIFIKASI: FUNGSI TARGET REPORT DINAMIS
     function openTargetReport() {
         const now = new Date();
         document.getElementById('targetMonth').value = String(now.getMonth() + 1).padStart(2, '0');
@@ -398,10 +405,21 @@
         generateTargetReport();
     }
 
+    function saveTargetNominal() {
+        const val = parseRaw(document.getElementById('targetNominalInput').value);
+        if (val <= 0 || isNaN(val)) return alert("Masukkan nominal target yang valid!");
+        db.ref('configApp/targetHarian').set(val).then(() => {
+            alert("Target harian diperbarui!");
+            generateTargetReport();
+        });
+    }
+
     function generateTargetReport() {
         const month = document.getElementById('targetMonth').value;
         const year = new Date().getFullYear();
-        const targetHarian = 271000;
+        const targetHarian = (localDB.configApp && localDB.configApp.targetHarian) ? localDB.configApp.targetHarian : 271000;
+        document.getElementById('targetNominalInput').value = fmtRp(targetHarian);
+
         const earnings = localDB.earningData || {};
         const firstDay = new Date(year, parseInt(month) - 1, 1).getDay();
         const daysInMonth = new Date(year, parseInt(month), 0).getDate();
@@ -428,7 +446,7 @@
                         <b>${fmtRp(totalTomyHariIni)}</b><br>
                         ${selisih < 0 
                             ? `<span class="status-minus">Kurang: ${fmtRp(Math.abs(selisih))}</span>` 
-                            : `<span class="status-lunas">✓ TARGET OK</span>`}
+                            : `<span class="status-lunas">✓ LUNAS (+${~~selisih > 0 ? fmtRp(selisih) : '0'})</span>`}
                     ` : `<i style="color:#999; font-size:0.7em;">No Data</i>`}
                 </div>
             </div>`;
@@ -437,6 +455,7 @@
         document.getElementById('targetCalendarOutput').innerHTML = html;
     }
 
+    // FUNGSI STANDAR VERSI 39
     function updateSelects() {
         const pks = localDB.daftarPekerja ? Object.values(localDB.daftarPekerja).sort() : [];
         ['namaOrang', 'k_nama'].forEach(id => {
