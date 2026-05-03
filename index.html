@@ -57,6 +57,10 @@
         .status-lunas { color: #27ae60; font-weight: bold; font-size: 0.8em; margin-top: 4px; }
         .status-minus { color: #e74c3c; font-weight: bold; font-size: 0.8em; margin-top: 4px; }
         .day-header { text-align: center; font-weight: bold; padding: 10px; color: var(--primary); font-size: 0.9em; background: var(--card); border-radius: 5px; }
+        
+        /* Load More Style */
+        .load-more-btn { width: 100%; padding: 15px; background: var(--card); border: 1px solid var(--border); color: var(--primary); font-weight: bold; margin-bottom: 20px; transition: 0.3s; border-radius: 0 0 12px 12px; }
+        .load-more-btn:hover { background: var(--primary); color: white; }
     </style>
 </head>
 <body class="dark-mode">
@@ -112,10 +116,10 @@
     </div>
 
     <div class="filter-container">
-        <div class="filter-group"><label>CARI NAMA</label><input type="text" id="filterName" placeholder="Ketik nama..." onkeyup="muatSemua()"></div>
+        <div class="filter-group"><label>CARI NAMA</label><input type="text" id="filterName" placeholder="Ketik nama..." onkeyup="resetLoadLimit()"></div>
         <div class="filter-group">
             <label>PILIH BULAN</label>
-            <select id="filterMonth" onchange="muatSemua()">
+            <select id="filterMonth" onchange="resetLoadLimit()">
                 <option value="">-- Semua Bulan --</option>
                 <option value="01">Januari</option><option value="02">Februari</option><option value="03">Maret</option>
                 <option value="04">April</option><option value="05">Mei</option><option value="06">Juni</option>
@@ -123,12 +127,12 @@
                 <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
             </select>
         </div>
-        <div class="filter-group"><label>DARI TANGGAL</label><input type="date" id="filterStart" onchange="muatSemua()"></div>
-        <div class="filter-group"><label>SAMPAI TANGGAL</label><input type="date" id="filterEnd" onchange="muatSemua()"></div>
+        <div class="filter-group"><label>DARI TANGGAL</label><input type="date" id="filterStart" onchange="resetLoadLimit()"></div>
+        <div class="filter-group"><label>SAMPAI TANGGAL</label><input type="date" id="filterEnd" onchange="resetLoadLimit()"></div>
         <button style="background:#7f8c8d; color:white; margin-left:auto" onclick="resetFilter()">RESET</button>
     </div>
 
-    <div class="table-container">
+    <div class="table-container" style="margin-bottom:0; border-radius: 0;">
         <table>
             <thead>
                 <tr>
@@ -141,8 +145,10 @@
             <tbody id="tableBody"></tbody>
         </table>
     </div>
+    <button id="btnLoadMore" class="load-more-btn" onclick="loadMore()" style="display:none;">MUAT LEBIH BANYAK...</button>
 </div>
 
+<!-- Modal Target Report -->
 <div id="modalTargetReport" class="modal">
     <div class="modal-content" style="max-width: 1000px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -172,6 +178,7 @@
     </div>
 </div>
 
+<!-- Modal Monthly Report -->
 <div id="modalPersonalStats" class="modal">
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -189,7 +196,6 @@
                     <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
                 </select>
             </div>
-
             <div class="filter-group">
                 <label style="color:#f1c40f; font-weight: bold;">SET SIKLUS (TGL MULAI)</label>
                 <div style="display: flex; gap: 5px; align-items: center;">
@@ -198,18 +204,17 @@
                     <button id="btnEditStartDay" onclick="toggleEditStartDay()" style="background:#f1c40f; color:#000; padding: 5px 10px; font-size: 0.8em;">EDIT</button>
                 </div>
             </div>
-
             <div style="margin-left: auto; display: flex; gap: 15px; align-items: center;">
                 <div style="display:flex; align-items:center; gap:5px; color:white; font-size:0.8em;"><div style="width:15px; height:15px; background:#3498db; border-radius:3px;"></div> ≥100M</div>
                 <div style="display:flex; align-items:center; gap:5px; color:white; font-size:0.8em;"><div style="width:15px; height:15px; background:#f1c40f; border-radius:3px;"></div> ≥70M</div>
                 <div style="display:flex; align-items:center; gap:5px; color:white; font-size:0.8em;"><div style="width:15px; height:15px; background:#e74c3c; border-radius:3px;"></div> <70M</div>
             </div>
         </div>
-
         <div id="monthlyReportOutput" class="table-container"></div>
     </div>
 </div>
 
+<!-- Modal Cost -->
 <div id="modalCost" class="modal">
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -229,14 +234,7 @@
             <table>
                 <thead>
                     <tr style="background:#2c3e50; color:#fff">
-                        <th>TANGGAL</th>
-                        <th>KEBUTUHAN / BON OPS</th>
-                        <th>QTY</th>
-                        <th>SATUAN</th>
-                        <th>HARGA</th>
-                        <th>TOTAL</th>
-                        <th>KETERANGAN</th>
-                        <th>X</th>
+                        <th>TANGGAL</th><th>KEBUTUHAN / BON OPS</th><th>QTY</th><th>SATUAN</th><th>HARGA</th><th>TOTAL</th><th>KETERANGAN</th><th>X</th>
                     </tr>
                 </thead>
                 <tbody id="costTableBody"></tbody>
@@ -254,16 +252,8 @@
             <h2 style="margin:0; color:#b8860b; font-family: 'Georgia', serif;">📜 FARM NOTES (B5)</h2>
             <button onclick="document.getElementById('notesModal').style.display='none'" style="background:#e74c3c; color:white;">✕</button>
         </div>
-        <textarea id="notesArea" 
-            style="width: 100%; height: 65vh; border: none; background: transparent; 
-            line-height: 25px; padding: 0 10px; font-family: 'Courier New', Courier, monospace;
-            background-image: linear-gradient(#d1d1d1 1px, transparent 1px);
-            background-size: 100% 25px; outline: none; resize: none; font-size: 1.1em; color: #2c3e50;"
-            placeholder="Ketik catatan penting di sini..."
-            oninput="saveNotes()"></textarea>
-        <div style="font-size: 0.8em; color: #888; margin-top: 15px; text-align: right; font-style: italic; border-top: 1px dashed #d4af37; padding-top: 5px;">
-            Awan Sync Aktif • Penyimpanan Otomatis
-        </div>
+        <textarea id="notesArea" style="width: 100%; height: 65vh; border: none; background: transparent; line-height: 25px; padding: 0 10px; font-family: 'Courier New', Courier, monospace; background-image: linear-gradient(#d1d1d1 1px, transparent 1px); background-size: 100% 25px; outline: none; resize: none; font-size: 1.1em; color: #2c3e50;" placeholder="Ketik catatan penting di sini..." oninput="saveNotes()"></textarea>
+        <div style="font-size: 0.8em; color: #888; margin-top: 15px; text-align: right; font-style: italic; border-top: 1px dashed #d4af37; padding-top: 5px;">Awan Sync Aktif • Penyimpanan Otomatis</div>
     </div>
 </div>
 
@@ -275,10 +265,7 @@
         </div>
         <div class="input-section" style="border-top: 6px solid #d35400;">
             <div class="input-group"><label>TANGGAL</label><input type="date" id="cash_tgl"></div>
-            <div class="input-group">
-                <label>PILIH KARAKTER</label>
-                <select id="cash_char"></select>
-            </div>
+            <div class="input-group"><label>PILIH KARAKTER</label><select id="cash_char"></select></div>
             <div class="input-group"><label>JUMLAH CASH</label><input type="text" id="cash_amount" placeholder="Contoh: 10.000 Cash"></div>
             <div class="input-group"><label>BIAYA (IDR)</label><input type="text" id="cash_price" onkeyup="formatInput(this)"></div>
             <div class="input-group" style="grid-column: span 2;"><label>KETERANGAN</label><input type="text" id="cash_ket" placeholder="Via apa / Untuk apa..."></div>
@@ -288,12 +275,7 @@
             <table>
                 <thead>
                     <tr style="background:#2c3e50; color:#fff">
-                        <th>TANGGAL</th>
-                        <th>KARAKTER</th>
-                        <th>JUMLAH CASH</th>
-                        <th>BIAYA (IDR)</th>
-                        <th>KETERANGAN</th>
-                        <th>X</th>
+                        <th>TANGGAL</th><th>KARAKTER</th><th>JUMLAH CASH</th><th>BIAYA (IDR)</th><th>KETERANGAN</th><th>X</th>
                     </tr>
                 </thead>
                 <tbody id="cashTableBody"></tbody>
@@ -315,6 +297,9 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     let localDB = {};
+    
+    // VARIABEL LOAD MORE
+    let displayLimit = 20;
 
     db.ref('/').on('value', snap => {
         localDB = snap.val() || {};
@@ -324,6 +309,17 @@
             document.getElementById('startDayConfig').value = localDB.configApp.startDay;
         }
     });
+
+    // FUNGSI LOAD MORE
+    function loadMore() {
+        displayLimit += 20;
+        muatSemua();
+    }
+
+    function resetLoadLimit() {
+        displayLimit = 20;
+        muatSemua();
+    }
 
     function toggleEditStartDay() {
         const input = document.getElementById('startDayConfig');
@@ -397,7 +393,6 @@
         document.getElementById('monthlyReportOutput').innerHTML = html + `</tbody></table>`;
     }
 
-    // MODIFIKASI: FUNGSI TARGET REPORT DINAMIS
     function openTargetReport() {
         const now = new Date();
         document.getElementById('targetMonth').value = String(now.getMonth() + 1).padStart(2, '0');
@@ -419,7 +414,6 @@
         const year = new Date().getFullYear();
         const targetHarian = (localDB.configApp && localDB.configApp.targetHarian) ? localDB.configApp.targetHarian : 271000;
         document.getElementById('targetNominalInput').value = fmtRp(targetHarian);
-
         const earnings = localDB.earningData || {};
         const firstDay = new Date(year, parseInt(month) - 1, 1).getDay();
         const daysInMonth = new Date(year, parseInt(month), 0).getDate();
@@ -441,13 +435,7 @@
             html += `<div class="cal-target-day">
                 <span class="cal-target-date">${day}</span>
                 <div class="total-info">
-                    ${dataExist ? `
-                        <small>Total Tomy:</small><br>
-                        <b>${fmtRp(totalTomyHariIni)}</b><br>
-                        ${selisih < 0 
-                            ? `<span class="status-minus">Kurang: ${fmtRp(Math.abs(selisih))}</span>` 
-                            : `<span class="status-lunas">✓ LUNAS (+${~~selisih > 0 ? fmtRp(selisih) : '0'})</span>`}
-                    ` : `<i style="color:#999; font-size:0.7em;">No Data</i>`}
+                    ${dataExist ? `<small>Total Tomy:</small><br><b>${fmtRp(totalTomyHariIni)}</b><br>${selisih < 0 ? `<span class="status-minus">Kurang: ${fmtRp(Math.abs(selisih))}</span>` : `<span class="status-lunas">✓ LUNAS (+${~~selisih > 0 ? fmtRp(selisih) : '0'})</span>`}` : `<i style="color:#999; font-size:0.7em;">No Data</i>`}
                 </div>
             </div>`;
         }
@@ -455,7 +443,6 @@
         document.getElementById('targetCalendarOutput').innerHTML = html;
     }
 
-    // FUNGSI STANDAR VERSI 39
     function updateSelects() {
         const pks = localDB.daftarPekerja ? Object.values(localDB.daftarPekerja).sort() : [];
         ['namaOrang', 'k_nama'].forEach(id => {
@@ -464,17 +451,13 @@
             pks.forEach(p => el.innerHTML += `<option value="${p}">${p}</option>`);
             el.value = cur;
         });
-
         const cashSel = document.getElementById('cash_char');
         if(cashSel) {
             const curC = cashSel.value; cashSel.innerHTML = '<option value="">-- Pilih Karakter --</option>';
             const akun = localDB.dataAkun || {};
-            Object.values(akun).forEach(a => {
-                if(a.char) cashSel.innerHTML += `<option value="${a.char}">${a.char}</option>`;
-            });
+            Object.values(akun).forEach(a => { if(a.char) cashSel.innerHTML += `<option value="${a.char}">${a.char}</option>`; });
             cashSel.value = curC;
         }
-
         const kats = localDB.daftarKategori ? Object.values(localDB.daftarKategori).sort() : ["PRIBADI", "OPERASIONAL"];
         const kSel = document.getElementById('k_kategori');
         if(kSel){
@@ -494,16 +477,38 @@
         const pks = localDB.daftarPekerja ? Object.values(localDB.daftarPekerja).sort() : [];
         const kats = localDB.daftarKategori ? Object.values(localDB.daftarKategori).sort() : ["PRIBADI", "OPERASIONAL"];
         
-        let tkot = 0, ttra = 0, ttomCurrent = 0, tkasE = 0, tkasO_Total = 0, tCostCurrent = 0, count = 0;
+        let tkot = 0, ttra = 0, ttomCurrent = 0, tkasE = 0, tkasO_Total = 0, tCostCurrent = 0;
 
+        // FILTER DAN HITUNG STATISTIK (Semua Data)
         const dEarn = localDB.earningData || {};
-        Object.keys(dEarn).sort((a,b) => new Date(dEarn[b].tgl) - new Date(dEarn[a].tgl)).forEach(k => {
-            const i = dEarn[k];
-            if((fM && i.tgl.split('-')[1] !== fM) || (fS && i.tgl < fS) || (fE && i.tgl > fE) || (fN && !i.namaOrang.toLowerCase().includes(fN))) return;
-            let kot = ((i.cegel||0)/1000000) * (i.rate||0), hTra = (((kot - (i.guardian||0)) / 2) + (i.makan || 0)) - (i.kasbon || 0), hTom = ((kot - (i.guardian||0)) / 2) - (i.makan || 0);
-            count++; tkot += kot; ttra += hTra; ttomCurrent += hTom; tkasE += (i.kasbon || 0);
-            body.innerHTML += `<tr><td class="td-edit"><select onchange="upEarn('${k}','namaOrang',this.value)">${pks.map(p=>`<option value="${p}" ${p===i.namaOrang?'selected':''}>${p}</option>`).join('')}</select></td><td class="td-edit"><input type="date" value="${i.tgl}" onchange="upEarn('${k}','tgl',this.value)"></td><td class="td-edit"><input type="text" value="${(i.cegel||0).toLocaleString('id-ID')}" onchange="upEarnNum('${k}','cegel',this.value)"></td><td>${((i.cegel||0)/1000000).toFixed(1)}M</td><td class="td-edit"><input type="text" value="${fmtRp(i.rate)}" onchange="upEarnNum('${k}','rate',this.value)" onkeyup="formatInput(this)"></td><td>${fmtRp(kot)}</td><td class="txt-transfer">${fmtRp(hTra)}</td><td class="txt-tomy">${fmtRp(hTom)}</td><td class="td-edit"><input type="text" value="${fmtRp(i.guardian)}" onchange="upEarnNum('${k}','guardian',this.value)" onkeyup="formatInput(this)"></td><td class="td-edit"><input type="text" value="${fmtRp(i.makan)}" onchange="upEarnNum('${k}','makan',this.value)" onkeyup="formatInput(this)"></td><td class="td-edit"><input type="text" value="${fmtRp(i.kasbon)}" onchange="upEarnNum('${k}','kasbon',this.value)" onkeyup="formatInput(this)"></td><td><button onclick="hapusDashboard('${k}')">✕</button></td></tr>`;
+        const allEarnData = Object.keys(dEarn).map(k => ({...dEarn[k], id: k})).sort((a,b) => new Date(b.tgl) - new Date(a.tgl));
+        
+        const filteredEarn = allEarnData.filter(i => {
+            if((fM && i.tgl.split('-')[1] !== fM) || (fS && i.tgl < fS) || (fE && i.tgl > fE) || (fN && !i.namaOrang.toLowerCase().includes(fN))) return false;
+            return true;
         });
+
+        // Hitung stats berdasarkan filter
+        filteredEarn.forEach(i => {
+            let kot = ((i.cegel||0)/1000000) * (i.rate||0), hTra = (((kot - (i.guardian||0)) / 2) + (i.makan || 0)) - (i.kasbon || 0), hTom = ((kot - (i.guardian||0)) / 2) - (i.makan || 0);
+            tkot += kot; ttra += hTra; ttomCurrent += hTom; tkasE += (i.kasbon || 0);
+        });
+
+        // TAMPILKAN DATA DENGAN LIMIT (LOAD MORE)
+        const displayedEarn = filteredEarn.slice(0, displayLimit);
+        displayedEarn.forEach(i => {
+            let kot = ((i.cegel||0)/1000000) * (i.rate||0), hTra = (((kot - (i.guardian||0)) / 2) + (i.makan || 0)) - (i.kasbon || 0), hTom = ((kot - (i.guardian||0)) / 2) - (i.makan || 0);
+            body.innerHTML += `<tr><td class="td-edit"><select onchange="upEarn('${i.id}','namaOrang',this.value)">${pks.map(p=>`<option value="${p}" ${p===i.namaOrang?'selected':''}>${p}</option>`).join('')}</select></td><td class="td-edit"><input type="date" value="${i.tgl}" onchange="upEarn('${i.id}','tgl',this.value)"></td><td class="td-edit"><input type="text" value="${(i.cegel||0).toLocaleString('id-ID')}" onchange="upEarnNum('${i.id}','cegel',this.value)"></td><td>${((i.cegel||0)/1000000).toFixed(1)}M</td><td class="td-edit"><input type="text" value="${fmtRp(i.rate)}" onchange="upEarnNum('${i.id}','rate',this.value)" onkeyup="formatInput(this)"></td><td>${fmtRp(kot)}</td><td class="txt-transfer">${fmtRp(hTra)}</td><td class="txt-tomy">${fmtRp(hTom)}</td><td class="td-edit"><input type="text" value="${fmtRp(i.guardian)}" onchange="upEarnNum('${i.id}','guardian',this.value)" onkeyup="formatInput(this)"></td><td class="td-edit"><input type="text" value="${fmtRp(i.makan)}" onchange="upEarnNum('${i.id}','makan',this.value)" onkeyup="formatInput(this)"></td><td class="td-edit"><input type="text" value="${fmtRp(i.kasbon)}" onchange="upEarnNum('${i.id}','kasbon',this.value)" onkeyup="formatInput(this)"></td><td><button onclick="hapusDashboard('${i.id}')">✕</button></td></tr>`;
+        });
+
+        // Toggle Tombol Load More
+        const btnLoad = document.getElementById('btnLoadMore');
+        if (filteredEarn.length > displayLimit) {
+            btnLoad.style.display = 'block';
+            btnLoad.innerText = `MUAT LEBIH BANYAK... (${filteredEarn.length - displayLimit} Tersisa)`;
+        } else {
+            btnLoad.style.display = 'none';
+        }
 
         const dKas = localDB.dbKasbon || {}; let rekKas = {};
         Object.keys(dKas).reverse().forEach(k => {
@@ -517,33 +522,17 @@
         const dCost = localDB.dbCost || {};
         Object.keys(dCost).forEach(k => { 
             const i = dCost[k], tot = (i.qty||0)*(i.harga||0); tCostCurrent += tot; 
-            cBody.innerHTML += `<tr>
-                <td class="td-edit"><input type="date" value="${i.tgl||''}" onchange="db.ref('dbCost/${k}/tgl').set(this.value)"></td>
-                <td class="td-edit"><input type="text" value="${i.jenis||''}" onchange="db.ref('dbCost/${k}/jenis').set(this.value)" style="text-align:left; padding-left:15px"></td>
-                <td class="td-edit"><input type="number" value="${i.qty||0}" onchange="db.ref('dbCost/${k}/qty').set(parseFloat(this.value)||0)"></td>
-                <td class="td-edit"><input type="text" value="${i.satuan||''}" onchange="db.ref('dbCost/${k}/satuan').set(this.value)"></td>
-                <td class="td-edit"><input type="text" value="${fmtRp(i.harga)}" onchange="db.ref('dbCost/${k}/harga').set(parseRaw(this.value))" onkeyup="formatInput(this)"></td>
-                <td style="font-weight:bold">${fmtRp(tot)}</td>
-                <td class="td-edit"><input type="text" value="${i.keterangan||''}" onchange="db.ref('dbCost/${k}/keterangan').set(this.value)"></td>
-                <td><button onclick="hapus('dbCost/${k}')">✕</button></td>
-            </tr>`; 
+            cBody.innerHTML += `<tr><td class="td-edit"><input type="date" value="${i.tgl||''}" onchange="db.ref('dbCost/${k}/tgl').set(this.value)"></td><td class="td-edit"><input type="text" value="${i.jenis||''}" onchange="db.ref('dbCost/${k}/jenis').set(this.value)" style="text-align:left; padding-left:15px"></td><td class="td-edit"><input type="number" value="${i.qty||0}" onchange="db.ref('dbCost/${k}/qty').set(parseFloat(this.value)||0)"></td><td class="td-edit"><input type="text" value="${i.satuan||''}" onchange="db.ref('dbCost/${k}/satuan').set(this.value)"></td><td class="td-edit"><input type="text" value="${fmtRp(i.harga)}" onchange="db.ref('dbCost/${k}/harga').set(parseRaw(this.value))" onkeyup="formatInput(this)"></td><td style="font-weight:bold">${fmtRp(tot)}</td><td class="td-edit"><input type="text" value="${i.keterangan||''}" onchange="db.ref('dbCost/${k}/keterangan').set(this.value)"></td><td><button onclick="hapus('dbCost/${k}')">✕</button></td></tr>`; 
         });
 
         const dCash = localDB.dbCashTopup || {};
         Object.keys(dCash).reverse().forEach(k => {
             const i = dCash[k];
-            cashBody.innerHTML += `<tr>
-                <td class="td-edit"><input type="date" value="${i.tgl}" onchange="db.ref('dbCashTopup/${k}/tgl').set(this.value)"></td>
-                <td><b>${i.char}</b></td>
-                <td class="td-edit"><input type="text" value="${i.amount}" onchange="db.ref('dbCashTopup/${k}/amount').set(this.value)"></td>
-                <td class="td-edit"><input type="text" value="${fmtRp(i.price)}" onchange="db.ref('dbCashTopup/${k}/price').set(parseRaw(this.value))" onkeyup="formatInput(this)"></td>
-                <td class="td-edit"><input type="text" value="${i.ket}" onchange="db.ref('dbCashTopup/${k}/ket').set(this.value)"></td>
-                <td><button onclick="hapus('dbCashTopup/${k}')">✕</button></td>
-            </tr>`;
+            cashBody.innerHTML += `<tr><td class="td-edit"><input type="date" value="${i.tgl}" onchange="db.ref('dbCashTopup/${k}/tgl').set(this.value)"></td><td><b>${i.char}</b></td><td class="td-edit"><input type="text" value="${i.amount}" onchange="db.ref('dbCashTopup/${k}/amount').set(this.value)"></td><td class="td-edit"><input type="text" value="${fmtRp(i.price)}" onchange="db.ref('dbCashTopup/${k}/price').set(parseRaw(this.value))" onkeyup="formatInput(this)"></td><td class="td-edit"><input type="text" value="${i.ket}" onchange="db.ref('dbCashTopup/${k}/ket').set(this.value)"></td><td><button onclick="hapus('dbCashTopup/${k}')">✕</button></td></tr>`;
         });
 
         document.getElementById('summaryStats').innerHTML = `<div class="stat-card" style="background:#27ae60"><span class="label">Pemasukan Kotor</span><span class="value">${fmtRp(tkot)}</span></div><div class="stat-card" style="background:#e67e22"><span class="label">Total Transfer</span><span class="value">${fmtRp(ttra)}</span></div><div class="stat-card" style="background:#e74c3c"><span class="label">Bon Operasional</span><span class="value">${fmtRp(tkasO_Total)}</span></div><div class="stat-card" style="background:#d35400"><span class="label">Cost Barang</span><span class="value">${fmtRp(tCostCurrent)}</span></div><div class="stat-card" style="background:#2980b9; grid-column: span 2;"><span class="label">Profit Kotor (Tomy)</span><span class="value">${fmtRp(ttomCurrent)}</span></div><div class="stat-card" style="background:#c0392b; grid-column: span 2;"><span class="label">Total Bon Pekerja</span><span class="value">${fmtRp(tkasE)}</span></div><div class="stat-card" style="background:#8e44ad; grid-column: span 4; text-align:center;"><span class="label">PROFIT BERSIH (NET)</span><span class="value" style="font-size:2.5em;">${fmtRp(ttomCurrent - tCostCurrent - tkasO_Total)}</span></div>`;
-        document.getElementById('syncStatus').innerText = `📍 Terhubung (${count} Data)`;
+        document.getElementById('syncStatus').innerText = `📍 Terhubung (${filteredEarn.length} Data)`;
     }
 
     function fmtRp(v) { return 'Rp ' + Math.round(v || 0).toLocaleString('id-ID'); }
@@ -584,34 +573,18 @@
     function upKas(k,f,v) { db.ref(`dbKasbon/${k}/${f}`).set(v); }
     function upKasNum(k,f,v) { db.ref(`dbKasbon/${k}/${f}`).set(parseRaw(v)); }
     function hapus(p) { if(confirm("Hapus?")) db.ref(p).remove(); }
-    
-    function hapusDashboard(k) { 
-        if(confirm("Hapus data dashboard ini?")) {
-            const dataTarget = localDB.earningData[k];
-            if (dataTarget && dataTarget.kasbon > 0) { const dKas = localDB.dbKasbon || {}; Object.keys(dKas).forEach(keyKas => { if (dKas[keyKas].parentKey === k) { db.ref(`dbKasbon/${keyKas}`).remove(); } }); }
-            db.ref(`earningData/${k}`).remove();
-        } 
-    }
-
+    function hapusDashboard(k) { if(confirm("Hapus data dashboard ini?")) { const dataTarget = localDB.earningData[k]; if (dataTarget && dataTarget.kasbon > 0) { const dKas = localDB.dbKasbon || {}; Object.keys(dKas).forEach(keyKas => { if (dKas[keyKas].parentKey === k) { db.ref(`dbKasbon/${keyKas}`).remove(); } }); } db.ref(`earningData/${k}`).remove(); } }
     function openNotesWithPassword() { if(prompt("Pass Notes:") === "tomy1234") { document.getElementById('notesModal').style.display = 'block'; loadNotes(); } }
     function saveNotes() { const text = document.getElementById('notesArea').value; db.ref('appNotes').set(text); }
     function loadNotes() { db.ref('appNotes').once('value', (snap) => { if(snap.exists()) { document.getElementById('notesArea').value = snap.val(); } }); }
-    function resetFilter() { document.querySelectorAll('.filter-container input, .filter-container select').forEach(i => i.value = ''); muatSemua(); }
+    function resetFilter() { document.querySelectorAll('.filter-container input, .filter-container select').forEach(i => i.value = ''); resetLoadLimit(); }
     function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
     function logout() { localStorage.removeItem("isLoggedIn"); location.reload(); }
     function checkPin() { if(document.getElementById('pinInput').value === "1234") { localStorage.setItem("isLoggedIn", "true"); document.getElementById('loginOverlay').style.display = 'none'; } }
     function bukaKasbonPrompt() { if(prompt("Pass Kasbon:") === "tomy1234") document.getElementById('modalKasbon').style.display='block'; }
     function openAccountWithPassword() { if(prompt("Pass Akun:") === "54321") document.getElementById('accountModal').style.display='block'; muatDataAkun(); }
     function openCashModal() { if(prompt("Pass TopUp:") === "tomy1234") document.getElementById('modalCash').style.display='block'; }
-    
-    function muatDataAkun() { 
-        const tbody = document.getElementById('accountTableBody'); tbody.innerHTML = ''; 
-        const akun = localDB.dataAkun || {}, pks = localDB.daftarPekerja ? Object.values(localDB.daftarPekerja).sort() : []; 
-        Object.keys(akun).forEach(k => { 
-            const d = akun[k], isUsed = d.pekerja && d.pekerja !== ""; 
-            tbody.innerHTML += `<tr><td><span class="status-dot ${isUsed ? 'dot-green' : 'dot-red'}"></span> <b>${isUsed ? 'TERPAKAI' : 'TERSEDIA'}</b></td><td class="td-edit"><input type="text" value="${d.char || ''}" onchange="db.ref('dataAkun/${k}/char').set(this.value)"></td><td class="td-edit"><input type="text" value="${d.user || ''}" onchange="db.ref('dataAkun/${k}/user').set(this.value)"></td><td class="td-edit"><input type="text" value="${d.pass || ''}" onchange="db.ref('dataAkun/${k}/pass').set(this.value)"></td><td class="td-edit"><select onchange="db.ref('dataAkun/${k}/pekerja').set(this.value || '')"><option value=\"\">-- Kosong --</option>${pks.map(p => `<option value="${p}" ${p === d.pekerja ? 'selected' : ''}>${p}</option>`).join('')}</select></td><td><button onclick=\"hapus('dataAkun/${k}')\">✕</button></td></tr>`; 
-        }); 
-    }
+    function muatDataAkun() { const tbody = document.getElementById('accountTableBody'); tbody.innerHTML = ''; const akun = localDB.dataAkun || {}, pks = localDB.daftarPekerja ? Object.values(localDB.daftarPekerja).sort() : []; Object.keys(akun).forEach(k => { const d = akun[k], isUsed = d.pekerja && d.pekerja !== ""; tbody.innerHTML += `<tr><td><span class="status-dot ${isUsed ? 'dot-green' : 'dot-red'}"></span> <b>${isUsed ? 'TERPAKAI' : 'TERSEDIA'}</b></td><td class="td-edit"><input type="text" value="${d.char || ''}" onchange="db.ref('dataAkun/${k}/char').set(this.value)"></td><td class="td-edit"><input type="text" value="${d.user || ''}" onchange="db.ref('dataAkun/${k}/user').set(this.value)"></td><td class="td-edit"><input type="text" value="${d.pass || ''}" onchange="db.ref('dataAkun/${k}/pass').set(this.value)"></td><td class="td-edit"><select onchange="db.ref('dataAkun/${k}/pekerja').set(this.value || '')"><option value=\"\">-- Kosong --</option>${pks.map(p => `<option value="${p}" ${p === d.pekerja ? 'selected' : ''}>${p}</option>`).join('')}</select></td><td><button onclick=\"hapus('dataAkun/${k}')\">✕</button></td></tr>`; }); }
     function tambahAkunBaru() { db.ref('dataAkun').push({ char: 'Baru', user: '', pass: '', pekerja: '' }); }
     function tambahPekerja() { const n = prompt("Nama:"); if(n) db.ref('daftarPekerja').push(n); }
     function hapusPekerja() { const v = document.getElementById('namaOrang').value; if(v && confirm(`Hapus ${v}?`)) db.ref('daftarPekerja').once('value', s => { s.forEach(c => { if(c.val() === v) c.ref.remove(); }); }); }
