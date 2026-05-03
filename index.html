@@ -29,6 +29,7 @@
         th, td { border: 1px solid var(--border); padding: 8px 5px; text-align: center; }
         th { background: #f2f2f2; color: #333; font-weight: bold; font-size: 0.7em; text-transform: uppercase; }
         tbody tr:nth-child(even) { background-color: var(--zebra); }
+        tfoot tr { background: #2c3e50; color: white; font-weight: bold; }
         .td-edit input, .td-edit select { border: none; background: transparent; text-align: center; color: inherit; font-size: 1.05em; width: 100%; }
         .td-edit input:focus { background: #ffffff !important; color: #000 !important; outline: 2px solid var(--primary); border-radius: 4px; }
         .bg-earning { background: #27ae60 !important; color: white !important; }
@@ -143,6 +144,14 @@
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="6" style="text-align:right; padding-right:15px;">TOTAL HALAMAN INI:</td>
+                    <td id="totalTransferPage" class="txt-transfer">Rp 0</td>
+                    <td id="totalTomyPage" class="txt-tomy">Rp 0</td>
+                    <td colspan="4"></td>
+                </tr>
+            </tfoot>
         </table>
     </div>
     <button id="btnLoadMore" class="load-more-btn" onclick="loadMore()" style="display:none;">MUAT LEBIH BANYAK...</button>
@@ -478,6 +487,7 @@
         const kats = localDB.daftarKategori ? Object.values(localDB.daftarKategori).sort() : ["PRIBADI", "OPERASIONAL"];
         
         let tkot = 0, ttra = 0, ttomCurrent = 0, tkasE = 0, tkasO_Total = 0, tCostCurrent = 0;
+        let tTraHalaman = 0, tTomHalaman = 0; // PENJUMLAHAN HALAMAN
 
         // FILTER DAN HITUNG STATISTIK (Semua Data)
         const dEarn = localDB.earningData || {};
@@ -498,8 +508,16 @@
         const displayedEarn = filteredEarn.slice(0, displayLimit);
         displayedEarn.forEach(i => {
             let kot = ((i.cegel||0)/1000000) * (i.rate||0), hTra = (((kot - (i.guardian||0)) / 2) + (i.makan || 0)) - (i.kasbon || 0), hTom = ((kot - (i.guardian||0)) / 2) - (i.makan || 0);
+            
+            // Tambahkan ke total baris yang sedang tampil
+            tTraHalaman += hTra; tTomHalaman += hTom;
+
             body.innerHTML += `<tr><td class="td-edit"><select onchange="upEarn('${i.id}','namaOrang',this.value)">${pks.map(p=>`<option value="${p}" ${p===i.namaOrang?'selected':''}>${p}</option>`).join('')}</select></td><td class="td-edit"><input type="date" value="${i.tgl}" onchange="upEarn('${i.id}','tgl',this.value)"></td><td class="td-edit"><input type="text" value="${(i.cegel||0).toLocaleString('id-ID')}" onchange="upEarnNum('${i.id}','cegel',this.value)"></td><td>${((i.cegel||0)/1000000).toFixed(1)}M</td><td class="td-edit"><input type="text" value="${fmtRp(i.rate)}" onchange="upEarnNum('${i.id}','rate',this.value)" onkeyup="formatInput(this)"></td><td>${fmtRp(kot)}</td><td class="txt-transfer">${fmtRp(hTra)}</td><td class="txt-tomy">${fmtRp(hTom)}</td><td class="td-edit"><input type="text" value="${fmtRp(i.guardian)}" onchange="upEarnNum('${i.id}','guardian',this.value)" onkeyup="formatInput(this)"></td><td class="td-edit"><input type="text" value="${fmtRp(i.makan)}" onchange="upEarnNum('${i.id}','makan',this.value)" onkeyup="formatInput(this)"></td><td class="td-edit"><input type="text" value="${fmtRp(i.kasbon)}" onchange="upEarnNum('${i.id}','kasbon',this.value)" onkeyup="formatInput(this)"></td><td><button onclick="hapusDashboard('${i.id}')">✕</button></td></tr>`;
         });
+
+        // Update baris Total di tfoot
+        document.getElementById('totalTransferPage').innerText = fmtRp(tTraHalaman);
+        document.getElementById('totalTomyPage').innerText = fmtRp(tTomHalaman);
 
         // Toggle Tombol Load More
         const btnLoad = document.getElementById('btnLoadMore');
