@@ -592,7 +592,7 @@
     function upKasNum(k,f,v) { db.ref(`dbKasbon/${k}/${f}`).set(parseRaw(v)); }
     function hapus(p) { if(confirm("Hapus?")) db.ref(p).remove(); }
     function hapusDashboard(k) { if(confirm("Hapus data dashboard ini?")) { const dataTarget = localDB.earningData[k]; if (dataTarget && dataTarget.kasbon > 0) { const dKas = localDB.dbKasbon || {}; Object.keys(dKas).forEach(keyKas => { if (dKas[keyKas].parentKey === k) { db.ref(`dbKasbon/${keyKas}`).remove(); } }); } db.ref(`earningData/${k}`).remove(); } }
-    function openNotesWithPassword() { if(prompt("Pass Notes:") === "tomy1234") { document.getElementById('notesModal').style.display = 'block'; loadNotes(); } }
+    function openNotesWithPassword() { if(prompt("Pass Notes:") === "198619") { document.getElementById('notesModal').style.display = 'block'; loadNotes(); } }
     function saveNotes() { const text = document.getElementById('notesArea').value; db.ref('appNotes').set(text); }
     function loadNotes() { db.ref('appNotes').once('value', (snap) => { if(snap.exists()) { document.getElementById('notesArea').value = snap.val(); } }); }
     function resetFilter() { document.querySelectorAll('.filter-container input, .filter-container select').forEach(i => i.value = ''); resetLoadLimit(); }
@@ -600,7 +600,7 @@
     function logout() { localStorage.removeItem("isLoggedIn"); location.reload(); }
     function checkPin() { if(document.getElementById('pinInput').value === "1234") { localStorage.setItem("isLoggedIn", "true"); document.getElementById('loginOverlay').style.display = 'none'; } }
     function bukaKasbonPrompt() { if(prompt("Pass Kasbon:") === "tomy1234") document.getElementById('modalKasbon').style.display='block'; }
-    function openAccountWithPassword() { if(prompt("Pass Akun:") === "54321") document.getElementById('accountModal').style.display='block'; muatDataAkun(); }
+    function openAccountWithPassword() { if(prompt("Pass Akun:") === "198619") document.getElementById('accountModal').style.display='block'; muatDataAkun(); }
     function openCashModal() { if(prompt("Pass TopUp:") === "tomy1234") document.getElementById('modalCash').style.display='block'; }
     function muatDataAkun() { const tbody = document.getElementById('accountTableBody'); tbody.innerHTML = ''; const akun = localDB.dataAkun || {}, pks = localDB.daftarPekerja ? Object.values(localDB.daftarPekerja).sort() : []; Object.keys(akun).forEach(k => { const d = akun[k], isUsed = d.pekerja && d.pekerja !== ""; tbody.innerHTML += `<tr><td><span class="status-dot ${isUsed ? 'dot-green' : 'dot-red'}"></span> <b>${isUsed ? 'TERPAKAI' : 'TERSEDIA'}</b></td><td class="td-edit"><input type="text" value="${d.char || ''}" onchange="db.ref('dataAkun/${k}/char').set(this.value)"></td><td class="td-edit"><input type="text" value="${d.user || ''}" onchange="db.ref('dataAkun/${k}/user').set(this.value)"></td><td class="td-edit"><input type="text" value="${d.pass || ''}" onchange="db.ref('dataAkun/${k}/pass').set(this.value)"></td><td class="td-edit"><select onchange="db.ref('dataAkun/${k}/pekerja').set(this.value || '')"><option value=\"\">-- Kosong --</option>${pks.map(p => `<option value="${p}" ${p === d.pekerja ? 'selected' : ''}>${p}</option>`).join('')}</select></td><td><button onclick=\"hapus('dataAkun/${k}')\">✕</button></td></tr>`; }); }
     function tambahAkunBaru() { db.ref('dataAkun').push({ char: 'Baru', user: '', pass: '', pekerja: '' }); }
