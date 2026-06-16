@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Farmhouse Bogor - Official Sync v22.8</title>
+    <title>GG FARMHOUSE - Official Sync v22.8</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
@@ -12,12 +12,51 @@
         body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 20px; background: var(--bg); color: var(--text); transition: 0.3s; padding-bottom: 40px; }
         .container { max-width: 1600px; margin: auto; }
         
-        /* Header Responsive */
-        .header-app { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; gap: 15px; }
-        .header-buttons { display:flex; gap:8px; flex-wrap: wrap; justify-content: flex-end; }
-        .sync-info { font-size: 0.85em; margin-top: 5px; color: white; background: #2c3e50; padding: 5px 12px; border-radius: 20px; display: inline-block; font-weight: bold; }
+        /* HEADER PREMIUM RE-DESIGN (RESPONSIF MOBILE-FIRST) */
+        .header-app { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background: var(--card); 
+            padding: 15px 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15); 
+            margin-bottom: 20px; 
+            gap: 20px; 
+        }
+        .header-brand-wrapper { 
+            display: flex; 
+            align-items: center; 
+            gap: 20px; 
+        }
+        .app-logo-hardcoded { 
+            width: 85px; 
+            height: 85px; 
+            flex-shrink: 0; 
+        }
+        .brand-text-container {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .header-buttons { 
+            display: flex; 
+            gap: 8px; 
+            flex-wrap: wrap; 
+            justify-content: flex-end; 
+        }
+        .sync-info { 
+            font-size: 0.8em; 
+            color: white; 
+            background: #2c3e50; 
+            padding: 6px 14px; 
+            border-radius: 20px; 
+            display: inline-block; 
+            font-weight: bold; 
+            width: fit-content;
+        }
         
-        /* Stats Grid - Layout Baru Memanjang Vertikal Sejajar Kanan */
+        /* Stats Grid - Layout Memanjang Vertikal Sejajar Kanan */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
         .stats-left-col { display: flex; flex-direction: column; }
         .stats-right-col { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
@@ -78,18 +117,56 @@
         .load-more-btn { width: 100%; padding: 15px; background: var(--card); border: 1px solid var(--border); color: var(--primary); font-weight: bold; margin-bottom: 20px; transition: 0.3s; border-radius: 0 0 12px 12px; }
         .load-more-btn:hover { background: var(--primary); color: white; }
 
-        /* LIST KASBON VISUAL - Kapasitas Ditambah Biar Lebih Panjang Ke Bawah */
         .visual-kasbon-container { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; padding-right: 5px; margin-top: 5px; }
         .visual-kasbon-item { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, rgba(44, 62, 80, 0.6), rgba(52, 73, 94, 0.6)); border-left: 5px solid #ff4d4d; padding: 11px 14px; border-radius: 8px; box-shadow: inset 0 1px 3px rgba(255,255,255,0.05); }
         .visual-kasbon-name { font-size: 1.05em; font-weight: 800; color: #fff; letter-spacing: 0.5px; }
         .visual-kasbon-amt { font-size: 1.15em; font-weight: 900; color: #ffff00; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
 
-        /* Responsive Mobile Breakpoint */
+        /* RESPONSIVE HEADERS BREAKPOINT UNTUK MOBILE */
         @media (max-width: 768px) {
             body { margin: 10px; font-size: 14px; }
-            .header-app { flex-direction: column; align-items: stretch; text-align: center; padding: 15px; }
-            .header-buttons { justify-content: center; gap: 6px; }
-            .header-buttons button { flex: 1 1 calc(50% - 6px); font-size: 12px; padding: 8px; min-height: 38px; }
+            
+            /* Header diubah menjadi susunan vertikal rapi di mobile */
+            .header-app { 
+                flex-direction: column; 
+                align-items: center; 
+                text-align: center; 
+                padding: 15px; 
+                gap: 15px;
+            }
+            .header-brand-wrapper { 
+                flex-direction: column; 
+                gap: 8px; 
+            }
+            /* Ukuran Logo dioptimalkan agar tidak memakan layar */
+            .app-logo-hardcoded { 
+                width: 70px; 
+                height: 70px; 
+            }
+            .brand-text-container h2 {
+                font-size: 1.4em !important;
+                letter-spacing: 1px;
+            }
+            .sync-info {
+                align-self: center;
+                font-size: 0.75em;
+                padding: 4px 12px;
+            }
+
+            /* Tombol Menu diubah menjadi Grid 3 Kolom Simetris & Presisi */
+            .header-buttons { 
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 6px; 
+                width: 100%;
+            }
+            .header-buttons button { 
+                width: 100%;
+                font-size: 11px; 
+                padding: 6px 4px; 
+                min-height: 42px; /* Nyaman disentuh jari */
+                border-radius: 6px;
+            }
             
             /* Stats layout kembali normal di mobile agar tidak sempit */
             .stats-grid { grid-template-columns: 1fr; gap: 10px; }
@@ -118,17 +195,99 @@
 
 <div id="loginOverlay">
     <div style="background: white; padding: 30px 20px; border-radius: 20px; text-align: center; width: 100%; max-width: 320px; box-sizing: border-box;">
-        <h2 style="color:#333; margin:0 0 20px 0; font-size: 1.5em;">🔐 FARMHOUSE LOGIN</h2>
+        <h2 style="color:#333; margin:0 0 20px 0; font-size: 1.5em;">🔐 GG FARMHOUSE LOGIN</h2>
         <input type="password" id="pinInput" style="text-align:center; font-size:2em; border: 2px solid #ddd; width: 100%;">
         <button style="background:#27ae60; color:white; width:100%; padding:15px; margin-top:20px" onclick="checkPin()">MASUK</button>
     </div>
 </div>
 
 <div class="container">
+    <!-- HEADER SECTION -->
     <div class="header-app">
-        <div>
-            <h2 style="margin:0; color:var(--primary); font-size: 1.5em;">Farmhouse Bogor Official</h2>
-            <div id="syncStatus" class="sync-info">📍 Menghubungkan...</div>
+        <div class="header-brand-wrapper">
+            <!-- EMBEDDED LOGO SVG -->
+            <div class="app-logo-hardcoded">
+                <svg viewBox="0 0 800 800" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <radialGradient id="bg-glow" cx="50%" cy="50%" r="50%">
+                            <stop offset="70%" stop-color="#0a122c"/>
+                            <stop offset="100%" stop-color="#050814"/>
+                        </radialGradient>
+                        <linearGradient id="cyber-blue" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#00f0ff"/>
+                            <stop offset="100%" stop-color="#0044ff"/>
+                        </linearGradient>
+                        <linearGradient id="cyber-green" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#39ff14"/>
+                            <stop offset="100%" stop-color="#00aa50"/>
+                        </linearGradient>
+                        <linearGradient id="text-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#ffffff"/>
+                            <stop offset="70%" stop-color="#d0f0ff"/>
+                            <stop offset="100%" stop-color="#70a0d0"/>
+                        </linearGradient>
+                        <filter id="glow-heavy" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="8" result="blur" />
+                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                        </filter>
+                        <filter id="glow-subtle" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="3" result="blur" />
+                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                        </filter>
+                    </defs>
+                    <circle cx="400" cy="400" r="380" fill="url(#bg-glow)" stroke="#003366" stroke-width="12"/>
+                    <circle cx="400" cy="400" r="365" fill="none" stroke="url(#cyber-blue)" stroke-width="6" opacity="0.8" filter="url(#glow-subtle)"/>
+                    <circle cx="400" cy="400" r="350" fill="none" stroke="#0d1b3e" stroke-width="4"/>
+                    <g stroke="#102a57" stroke-width="3" fill="none" opacity="0.6">
+                        <path d="M 120 400 L 200 400 M 150 350 L 180 380 M 150 450 L 180 420" />
+                        <path d="M 680 400 L 600 400 M 650 350 L 620 380 M 650 450 L 620 420" />
+                        <path d="M 400 120 L 400 180 M 350 150 L 380 170 M 450 150 L 420 170" />
+                    </g>
+                    <path d="M 220 240 Q 400 200 580 240 L 550 500 Q 400 620 250 500 Z" fill="#060d22" stroke="url(#cyber-green)" stroke-width="5" filter="url(#glow-subtle)"/>
+                    <path d="M 235 255 Q 400 218 565 255 L 538 490 Q 400 598 262 490 Z" fill="none" stroke="#12403f" stroke-width="2"/>
+                    <path d="M 350 200 L 330 150 L 370 165 L 400 130 L 430 165 L 470 150 L 450 200 Z" fill="none" stroke="url(#cyber-blue)" stroke-width="4" stroke-linejoin="round" filter="url(#glow-subtle)"/>
+                    <circle cx="400" cy="125" r="5" fill="#00f0ff" filter="url(#glow-heavy)"/>
+                    <g transform="translate(0, -10)">
+                        <path d="M 390 280 C 310 280 260 310 260 380 C 260 450 310 480 380 480 L 390 480 L 390 435 L 340 435 C 315 435 305 420 305 380 C 305 340 320 325 360 325 L 390 325 Z" fill="none" stroke="url(#cyber-blue)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow-subtle)"/>
+                        <path d="M 310 380 H 340 M 325 365 V 395" stroke="#00f0ff" stroke-width="6" stroke-linecap="round" />
+                        <path d="M 410 280 C 490 280 540 310 540 380 C 540 450 490 480 420 480 L 410 480 L 410 410 L 460 410 L 460 440 L 425 440" fill="none" stroke="url(#cyber-green)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow-heavy)"/>
+                        <circle cx="490" cy="350" r="6" fill="#39ff14"/>
+                        <circle cx="515" cy="370" r="6" fill="#39ff14"/>
+                        <circle cx="465" cy="370" r="6" fill="#39ff14"/>
+                        <circle cx="490" cy="390" r="6" fill="#39ff14"/>
+                        <path d="M 390 350 L 410 350" stroke="#39ff14" stroke-width="6" stroke-linecap="round"/>
+                        <circle cx="400" cy="350" r="4" fill="#00f0ff"/>
+                    </g>
+                    <g transform="translate(0, 30)">
+                        <path d="M 360 550 Q 400 540 440 550 L 430 600 Q 400 630 370 600 Z" fill="#091733" stroke="url(#cyber-blue)" stroke-width="3" />
+                        <rect x="380" y="565" width="40" height="22" rx="11" fill="#11254a" stroke="#00f0ff" stroke-width="2"/>
+                        <circle cx="392" cy="576" r="3" fill="#39ff14"/>
+                        <circle cx="408" cy="576" r="3" fill="#39ff14"/>
+                        <path d="M 350 560 C 310 540 280 570 320 595 C 290 580 270 610 330 615" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
+                        <path d="M 450 560 C 490 540 520 570 480 595 C 510 580 530 610 470 615" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
+                        <polygon points="260,570 263,576 270,577 265,582 266,589 260,585 254,589 255,582 250,577 257,576" fill="#39ff14" />
+                        <polygon points="540,570 543,576 550,577 545,582 546,589 540,585 534,589 535,582 530,577 537,576" fill="#39ff14" />
+                    </g>
+                    <g id="text-banner">
+                        <path d="M 150 480 L 170 440 L 630 440 L 650 480 L 620 540 L 180 540 Z" fill="#08142c" stroke="url(#cyber-blue)" stroke-width="4" stroke-linejoin="round"/>
+                        <path d="M 150 480 L 120 530 L 180 540" fill="#040a18" stroke="#0044ff" stroke-width="2"/>
+                        <path d="M 650 480 L 680 530 L 620 540" fill="#040a18" stroke="#0044ff" stroke-width="2"/>
+                        <text x="400" y="510" font-family="'Impact', 'Arial Black', sans-serif" font-size="62" font-weight="900" font-style="italic" letter-spacing="2" fill="url(#text-grad)" text-anchor="middle" stroke="#020813" stroke-width="3" filter="drop-shadow(0px 4px 8px rgba(0,0,0,0.8))">GG GAMEHOUSE</text>
+                    </g>
+                    <g id="location-banner" transform="translate(0, 140)">
+                        <path d="M 300 550 L 500 550 L 480 590 L 320 590 Z" fill="#040b1c" stroke="url(#cyber-blue)" stroke-width="2"/>
+                        <circle cx="280" cy="570" r="14" fill="#fff" stroke="#00f0ff" stroke-width="2"/>
+                        <path d="M 266 570 A 14 14 0 0 1 294 570 Z" fill="#ff0000"/>
+                        <circle cx="520" cy="570" r="14" fill="#fff" stroke="#00f0ff" stroke-width="2"/>
+                        <path d="M 506 570 A 14 14 0 0 1 534 570 Z" fill="#ff0000"/>
+                        <text x="400" y="580" font-family="'Arial Black', sans-serif" font-size="28" font-weight="bold" letter-spacing="4" fill="#ffffff" text-anchor="middle">BOGOR</text>
+                    </g>
+                </svg>
+            </div>
+            <div class="brand-text-container">
+                <h2 style="margin:0; color:var(--primary); font-size: 1.8em; font-weight: 900; letter-spacing: 0.5px;">GG FARMHOUSE</h2>
+                <div id="syncStatus" class="sync-info">📍 Menghubungkan...</div>
+            </div>
         </div>
         <div class="header-buttons">
             <button style="background:#2ecc71; color:white" onclick="openTargetReport()">🎯 Target</button>
@@ -208,7 +367,7 @@
     <button id="btnLoadMore" class="load-more-btn" onclick="loadMore()" style="display:none;">MUAT LEBIH BANYAK...</button>
 </div>
 
-<!-- Semua Modals & Pop-up (Tetap Dipertahankan) -->
+<!-- Modals & Pop-up -->
 <div id="modalTargetReport" class="modal"><div class="modal-content" style="max-width: 1000px;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;"><h2 style="color:#2ecc71; margin:0; font-size:1.3em;">🗓️ TARGET SETORAN</h2><button onclick="document.getElementById('modalTargetReport').style.display='none'" style="background:#333; color:white;">✕</button></div><div class="filter-container" style="background: #2c3e50; margin-bottom: 15px; border-bottom: none; border-radius: 12px; display: flex; align-items: center; gap: 15px;"><div class="filter-group"><label style="color:white">PILIH BULAN</label><select id="targetMonth" onchange="generateTargetReport()"><option value="01">Januari</option><option value="02">Februari</option><option value="03">Maret</option><option value="04">April</option><option value="05">Mei</option><option value="06">Juni</option><option value="07">Juli</option><option value="08">Agustus</option><option value="09">September</option><option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option></select></div><div class="filter-group"><label style="color:#2ecc71; font-weight: bold;">TARGET HARIAN (IDR)</label><div style="display: flex; gap: 5px; align-items: center;"><input type="text" id="targetNominalInput" onkeyup="formatInput(this)" style="width: 130px; text-align: center; border: 2px solid #2ecc71; color: white; background: rgba(0,0,0,0.3);"><button onclick="saveTargetNominal()" style="background:#2ecc71; color:#fff; padding: 10px 15px; min-height:42px;">SET</button></div></div></div><div id="targetCalendarOutput"></div></div></div>
 <div id="modalPersonalStats" class="modal"><div class="modal-content"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;"><h2 style="color:#1abc9c; margin:0; font-size:1.2em;">📊 REPORT ABSENSI & WEEKLY</h2><button onclick="document.getElementById('modalPersonalStats').style.display='none'" style="background:#333; color:white;">✕</button></div><div class="filter-container" style="margin-bottom:15px; border-radius: 12px; border-bottom: none; background: #2c3e50; display: flex; align-items: center; gap: 15px;"><div class="filter-group"><label style="color:white">PILIH BULAN</label><select id="statMonth" onchange="generateMonthlyReport()"><option value="01">Januari</option><option value="02">Februari</option><option value="03">Maret</option><option value="04">April</option><option value="05">Mei</option><option value="06">Juni</option><option value="07">Juli</option><option value="08">Agustus</option><option value="09">September</option><option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option></select></div><div class="filter-group"><label style="color:#f1c40f; font-weight: bold;">SET SIKLUS (TGL MULAI)</label><div style="display: flex; gap: 5px; align-items: center;"><input type="number" id="startDayConfig" min="1" max="31" disabled style="width: 60px; text-align: center; border: 2px solid #f1c40f; color: white; background: rgba(0,0,0,0.3);"><button id="btnEditStartDay" onclick="toggleEditStartDay()" style="background:#f1c40f; color:#000; padding: 5px 10px; font-size: 0.8em; min-height:42px;">EDIT</button></div></div><div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;"><div style="display:flex; align-items:center; gap:5px; color:white; font-size:0.8em;"><div style="width:12px; height:12px; background:#3498db; border-radius:3px;"></div> ≥100M</div><div style="display:flex; align-items:center; gap:5px; color:white; font-size:0.8em;"><div style="width:12px; height:12px; background:#f1c40f; border-radius:3px;"></div> ≥70M</div><div style="display:flex; align-items:center; gap:5px; color:white; font-size:0.8em;"><div style="width:12px; height:12px; background:#e74c3c; border-radius:3px;"></div> <70M</div></div></div><div id="monthlyReportOutput" class="table-container"></div></div></div>
 <div id="modalCost" class="modal"><div class="modal-content"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;"><h2 style="color:#e67e22; margin:0; font-size:1.3em;">💸 PENGELUARAN COST</h2><button onclick="document.getElementById('modalCost').style.display='none'" style="background:#333; color:white;">✕</button></div><div class="input-section" style="border-top: 6px solid #e67e22;"><div class="input-group"><label>TGL</label><input type="date" id="c_tgl"></div><div class="input-group" style="grid-column: span 2;"><label>JENIS BARANG</label><input type="text" id="c_jenis"></div><div class="input-group"><label>QTY</label><input type="number" id="c_qty" placeholder="0"></div><div class="input-group"><label>SATUAN</label><input type="text" id="c_satuan" placeholder="Pcs/Bks/dll"></div><div class="input-group"><label>HARGA</label><input type="text" id="c_harga" onkeyup="formatInput(this)"></div><div class="input-group" style="grid-column: span 2;"><label>KETERANGAN</label><input type="text" id="c_ket" placeholder="Tambahkan catatan..."></div><button style="background:#e67e22; color:white;" onclick="simpanCost()">SIMPAN</button></div><div class="table-container"><table><thead><tr style="background:#2c3e50; color:#fff"><th>TANGGAL</th><th>KEBUTUHAN / BON OPS</th><th>QTY</th><th>SATUAN</th><th>HARGA</th><th>TOTAL</th><th>KETERANGAN</th><th>X</th></tr></thead><tbody id="costTableBody"></tbody></table></div></div></div>
@@ -390,7 +549,6 @@
         }
     }
 
-    /* Fungsi Pem pem pemuatan komponen utama */
     function muatSemua() {
         const fS = document.getElementById('filterStart').value, fE = document.getElementById('filterEnd').value, fN = document.getElementById('filterName').value.toLowerCase(), fM = document.getElementById('filterMonth').value;
         const body = document.getElementById('tableBody'); body.innerHTML = '';
@@ -475,9 +633,7 @@
             cashBody.innerHTML += `<tr><td class="td-edit"><input type="date" value="${i.tgl}" onchange="db.ref('dbCashTopup/${k}/tgl').set(this.value)"></td><td><b>${i.char}</b></td><td class="td-edit"><input type="text" value="${i.amount}" onchange="db.ref('dbCashTopup/${k}/amount').set(this.value)"></td><td class="td-edit"><input type="text" value="${fmtRp(i.price)}" onchange="db.ref('dbCashTopup/${k}/price').set(parseRaw(this.value))" onkeyup="formatInput(this)"></td><td class="td-edit"><input type="text" value="${i.ket}" onchange="db.ref('dbCashTopup/${k}/ket').set(this.value)"></td><td><button onclick="hapus('dbCashTopup/${k}')">✕</button></td></tr>`;
         });
 
-        /* RE-STRUCTURING DOM STATISTIK JADI DUA KOLOM (KIRI KASBON, KANAN PROFIT-PROFIT SEJAJAR VERTIKAL) */
         document.getElementById('summaryStats').innerHTML = `
-            <!-- Kolom Kiri: Kasbon Aktif Diberikan Ruang Penuh Kebawah -->
             <div class="stats-left-col">
                 <div class="stat-card" style="background:#2c3e50; height: 100%; display: flex; flex-direction: column;">
                     <span class="label" style="border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:5px; margin-bottom:8px;">⚠️ SALDO KASBON AKTIF</span>
@@ -485,7 +641,6 @@
                 </div>
             </div>
             
-            <!-- Kolom Kanan: Rata Kanan Sejajar di Bawah Kotak Transfer -->
             <div class="stats-right-col">
                 <div class="stat-card" style="background:#27ae60"><span class="label">Kotor</span><span class="value">${fmtRp(tkot)}</span></div>
                 <div class="stat-card" style="background:#e67e22"><span class="label">Transfer</span><span class="value">${fmtRp(ttra)}</span></div>
